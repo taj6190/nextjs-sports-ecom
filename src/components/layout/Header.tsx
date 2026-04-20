@@ -88,34 +88,34 @@ export default function Header() {
     <>
       <header className="sticky top-0 z-40 bg-white border-b border-slate-200">
         <div className="max-w-[1400px] mx-auto px-4 md:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-3 items-center h-[72px]">
-            {/* Logo - Left */}
-            <div className="flex justify-start">
+          <div className="flex items-center h-[72px]">
+            {/* Left Group: Logo & Nav */}
+            <div className="flex items-center gap-14 flex-1">
               <Link href="/" className="flex items-center group shrink-0">
                 <span className="text-3xl font-black text-[#111111] tracking-tighter italic">
                   VELOCITY
                 </span>
               </Link>
+
+              {/* Desktop Nav - Left Aligned */}
+              <nav className="hidden md:flex items-center gap-8">
+                <Link href="/shop" className="py-2 text-[15px] font-bold text-[#111111] hover:text-[#ef4a23] transition-colors uppercase tracking-tight">
+                  Shop All
+                </Link>
+                <Link href="/shop?sort=newest" className="py-2 text-[15px] font-bold text-[#111111] hover:text-[#ef4a23] transition-colors uppercase tracking-tight">
+                  New Releases
+                </Link>
+                <Link
+                  href="/deals"
+                  className="flex items-center gap-1 py-2 text-[15px] font-bold text-red-600 hover:opacity-70 transition-opacity uppercase tracking-tight"
+                >
+                  Sale
+                </Link>
+              </nav>
             </div>
 
-            {/* Desktop Nav - Center */}
-            <nav className="hidden md:flex items-center justify-center gap-10">
-              <Link href="/shop" className="py-2 text-[15px] font-bold text-[#111111] hover:text-[#ef4a23] transition-colors uppercase tracking-tight">
-                Shop All
-              </Link>
-              <Link href="/shop?sort=newest" className="py-2 text-[15px] font-bold text-[#111111] hover:text-[#ef4a23] transition-colors uppercase tracking-tight">
-                New Releases
-              </Link>
-              <Link
-                href="/deals"
-                className="flex items-center gap-1 py-2 text-[15px] font-bold text-red-600 hover:opacity-70 transition-opacity uppercase tracking-tight"
-              >
-                Sale
-              </Link>
-            </nav>
-
             {/* Right Actions - Right */}
-            <div className="flex items-center justify-end gap-3 shrink-0">
+            <div className="flex items-center gap-3 shrink-0 ml-auto">
               
               {/* Desktop Search Bar */}
               <div ref={searchRef} className="hidden md:flex relative group-search">
