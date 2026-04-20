@@ -6,7 +6,7 @@ import type { ICategory } from "@/types";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { FiChevronDown, FiHeart, FiLogOut, FiMenu, FiSearch, FiSettings, FiShoppingCart, FiUser } from "react-icons/fi";
+import { FiHeart, FiLogOut, FiMenu, FiSearch, FiSettings, FiShoppingCart, FiUser } from "react-icons/fi";
 import CartDrawer from "../cart/CartDrawer";
 import MobileNav from "./MobileNav";
 
@@ -19,8 +19,6 @@ export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryTree, setCategoryTree] = useState<(ICategory & { children?: ICategory[] })[]>([]);
-  const [catDropdownOpen, setCatDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const { items: wishlistItems, syncFromServer: syncWishlist } = useWishlistStore();
 
   // Fix hydration mismatch by holding client-side values in state
@@ -42,16 +40,7 @@ export default function Header() {
       .then((d) => d.success && setCategoryTree(d.data));
   }, []);
 
-  // Close dropdown on outside click
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setCatDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
+
 
   return (
     <>
@@ -68,70 +57,14 @@ export default function Header() {
             {/* Desktop Nav */}
             <nav className="hidden md:flex items-center gap-8">
               <Link href="/shop" className="py-2 text-[15px] font-bold text-[#111111] hover:opacity-70 transition-opacity">
+                Shop All
+              </Link>
+              <Link href="/shop?sort=newest" className="py-2 text-[15px] font-bold text-[#111111] hover:opacity-70 transition-opacity">
                 New Releases
               </Link>
-              {categoryTree.slice(0, 3).map(cat => (
-                <Link key={cat._id} href={`/shop?category=${cat._id}`} className="py-2 text-[15px] font-bold text-[#111111] hover:opacity-70 transition-opacity">
-                  {cat.name}
-                </Link>
-              ))}
-
-              {/* Categories Dropdown */}
-              <div className="relative group/cat" ref={dropdownRef}>
-                <button
-                  onClick={() => setCatDropdownOpen(!catDropdownOpen)}
-                  onMouseEnter={() => setCatDropdownOpen(true)}
-                  className="flex items-center gap-1.5 py-2 text-[15px] font-bold text-[#111111] hover:opacity-70 transition-opacity cursor-pointer"
-                >
-                  All Gear <FiChevronDown size={16} className={`transition-transform duration-300 ${catDropdownOpen ? "rotate-180" : ""}`} />
-                </button>
-
-                {catDropdownOpen && categoryTree.length > 0 && (
-                  <div 
-                    onMouseLeave={() => setCatDropdownOpen(false)}
-                    className="absolute top-full left-1/2 -translate-x-1/2 mt-[1px] min-w-[500px] w-max max-w-[800px] bg-white shadow-[0_10px_40px_rgba(0,0,0,0.08)] p-8 animate-fade-in z-50 flex gap-8 rounded-b-xl border border-slate-100"
-                  >
-                    <div className="w-1/3 border-r border-slate-100 pr-8 space-y-2">
-                      {categoryTree.map((cat) => (
-                        <Link
-                            key={cat._id}
-                            href={`/shop?category=${cat._id}`}
-                            onClick={() => setCatDropdownOpen(false)}
-                            className="flex items-center gap-3 py-2 text-[15px] font-medium text-slate-800 hover:text-[#111111] transition-colors"
-                          >
-                            {cat.name}
-                        </Link>
-                      ))}
-                    </div>
-                    <div className="w-2/3 grid grid-cols-2 gap-x-8 gap-y-8 content-start">
-                         {categoryTree.map((cat) => (
-                             cat.children && cat.children.length > 0 ? (
-                                <div key={`sub-${cat._id}`} className="space-y-3">
-                                  <p className="text-[15px] font-bold text-[#111111]">{cat.name}</p>
-                                  <div className="flex flex-col space-y-2">
-                                    {cat.children.map((sub) => (
-                                      <Link
-                                        key={sub._id}
-                                        href={`/shop?category=${sub._id}`}
-                                        onClick={() => setCatDropdownOpen(false)}
-                                        className="text-[14px] font-medium text-slate-500 hover:text-[#111111] transition-colors"
-                                      >
-                                        {sub.name}
-                                      </Link>
-                                    ))}
-                                  </div>
-                                </div>
-                             ) : null
-                         ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Sale */}
               <Link
                 href="/deals"
-                className="flex items-center gap-1 py-2 text-[15px] font-bold text-red-600 hover:opacity-70 transition-opacity ml-2"
+                className="flex items-center gap-1 py-2 text-[15px] font-bold text-red-600 hover:opacity-70 transition-opacity"
               >
                 Sale
               </Link>
@@ -251,6 +184,40 @@ export default function Header() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Categories Secondary Nav */}
+        <div className="hidden md:block bg-white border-t border-slate-100">
+          <div className="max-w-[1400px] mx-auto px-8">
+            <div className="flex items-center justify-center gap-10 h-11">
+              {categoryTree.map((cat) => (
+                <div key={cat._id} className="relative group/nav h-full">
+                  <Link
+                    href={`/shop?category=${cat._id}`}
+                    className="flex items-center h-full text-[12px] font-bold uppercase tracking-[0.15em] text-[#111] hover:opacity-100 opacity-70 transition-all border-b-2 border-transparent group-hover/nav:border-black group-hover/nav:opacity-100"
+                  >
+                    {cat.name}
+                  </Link>
+                  
+                  {cat.children && cat.children.length > 0 && (
+                    <div className="absolute top-full left-0 bg-white border border-slate-200 shadow-[0_15px_30px_rgba(0,0,0,0.1)] min-w-[220px] opacity-0 invisible group-hover/nav:opacity-100 group-hover/nav:visible transition-all duration-200 z-50 translate-y-1 group-hover/nav:translate-y-0">
+                      <div className="py-3">
+                        {cat.children.map((sub) => (
+                          <Link
+                            key={sub._id}
+                            href={`/shop?category=${sub._id}`}
+                            className="block px-6 py-2.5 text-[13px] font-medium text-slate-600 hover:bg-slate-50 hover:text-black transition-colors"
+                          >
+                            {sub.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </header>
 
