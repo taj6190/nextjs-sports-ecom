@@ -18,8 +18,12 @@ export default function Header() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   const [categoryTree, setCategoryTree] = useState<(ICategory & { children?: ICategory[] })[]>([]);
   const { items: wishlistItems, syncFromServer: syncWishlist } = useWishlistStore();
+  const searchRef = useRef<HTMLDivElement>(null);
 
   // Fix hydration mismatch by holding client-side values in state
   const [isClient, setIsClient] = useState(false);
@@ -40,56 +44,142 @@ export default function Header() {
       .then((d) => d.success && setCategoryTree(d.data));
   }, []);
 
+  // AJAX Search logic
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setShowResults(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const res = await fetch(`/api/products?search=${encodeURIComponent(searchQuery)}&limit=5`);
+        const data = await res.json();
+        if (data.success) {
+          setSearchResults(data.data);
+          setShowResults(true);
+        }
+      } catch (error) {
+        console.error("Search error:", error);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Close search results when clicking outside
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowResults(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
 
 
   return (
     <>
       <header className="sticky top-0 z-40 bg-white border-b border-slate-200">
         <div className="max-w-[1400px] mx-auto px-4 md:px-8">
-          <div className="flex items-center justify-between h-[72px]">
-            {/* Logo */}
-            <Link href="/" className="flex items-center group shrink-0 pr-6">
-              <span className="text-3xl font-black text-[#111111] tracking-tighter italic">
-                VELOCITY
-              </span>
-            </Link>
+          <div className="grid grid-cols-2 md:grid-cols-3 items-center h-[72px]">
+            {/* Logo - Left */}
+            <div className="flex justify-start">
+              <Link href="/" className="flex items-center group shrink-0">
+                <span className="text-3xl font-black text-[#111111] tracking-tighter italic">
+                  VELOCITY
+                </span>
+              </Link>
+            </div>
 
-            {/* Desktop Nav */}
-            <nav className="hidden md:flex items-center gap-8">
-              <Link href="/shop" className="py-2 text-[15px] font-bold text-[#111111] hover:opacity-70 transition-opacity">
+            {/* Desktop Nav - Center */}
+            <nav className="hidden md:flex items-center justify-center gap-10">
+              <Link href="/shop" className="py-2 text-[15px] font-bold text-[#111111] hover:text-[#ef4a23] transition-colors uppercase tracking-tight">
                 Shop All
               </Link>
-              <Link href="/shop?sort=newest" className="py-2 text-[15px] font-bold text-[#111111] hover:opacity-70 transition-opacity">
+              <Link href="/shop?sort=newest" className="py-2 text-[15px] font-bold text-[#111111] hover:text-[#ef4a23] transition-colors uppercase tracking-tight">
                 New Releases
               </Link>
               <Link
                 href="/deals"
-                className="flex items-center gap-1 py-2 text-[15px] font-bold text-red-600 hover:opacity-70 transition-opacity"
+                className="flex items-center gap-1 py-2 text-[15px] font-bold text-red-600 hover:opacity-70 transition-opacity uppercase tracking-tight"
               >
                 Sale
               </Link>
             </nav>
 
-            {/* Right Actions */}
-            <div className="flex items-center gap-4 shrink-0 ml-auto">
+            {/* Right Actions - Right */}
+            <div className="flex items-center justify-end gap-3 shrink-0">
               
               {/* Desktop Search Bar */}
-              <div className="hidden md:flex relative w-[180px] group-search focus-within:w-[260px] transition-all duration-300">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiSearch className="text-[#111] opacity-50" size={18} />
+              <div ref={searchRef} className="hidden md:flex relative group-search">
+                  <div className="relative w-[180px] focus-within:w-[280px] transition-all duration-500 ease-out">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <FiSearch className="text-[#111] opacity-50" size={17} />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Search items..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onFocus={() => searchQuery && setShowResults(true)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && searchQuery.trim()) {
+                          window.location.href = `/shop?search=${encodeURIComponent(searchQuery)}`;
+                        }
+                      }}
+                      className="w-full pl-10 pr-4 py-2 bg-slate-100 hover:bg-slate-200/70 border border-transparent focus:border-slate-300 focus:bg-white text-[14px] text-[#111111] placeholder-slate-500 focus:outline-none transition-all duration-300"
+                    />
+                    
+                    {/* AJAX Results Dropdown */}
+                    {showResults && (
+                      <div className="absolute top-[calc(100%+8px)] right-0 w-[350px] bg-white shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-100 animate-in fade-in slide-in-from-top-2 duration-200 z-[100]">
+                        <div className="p-2 border-b border-slate-50 flex items-center justify-between px-4 bg-slate-50/50">
+                          <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Products Found</span>
+                          {isSearching && <div className="w-3 h-3 border-2 border-slate-300 border-t-slate-800 rounded-full animate-spin" />}
+                        </div>
+                        <div className="max-h-[400px] overflow-y-auto">
+                          {searchResults.length > 0 ? (
+                            searchResults.map((product) => (
+                              <Link
+                                key={product._id}
+                                href={`/product/${product.slug}`}
+                                onClick={() => setShowResults(false)}
+                                className="flex items-center gap-4 p-3 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-none"
+                              >
+                                <div className="w-12 h-12 bg-slate-50 shrink-0 overflow-hidden">
+                                  <img src={product.images[0]?.url} alt={product.name} className="w-full h-full object-cover" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="text-[13px] font-bold text-[#111] truncate">{product.name}</h4>
+                                  <p className="text-[12px] text-slate-500 font-medium">${product.basePrice}</p>
+                                </div>
+                              </Link>
+                            ))
+                          ) : !isSearching ? (
+                            <div className="p-8 text-center">
+                              <p className="text-[13px] text-slate-500 font-medium">No matches for "{searchQuery}"</p>
+                            </div>
+                          ) : null}
+                        </div>
+                        {searchResults.length > 0 && (
+                          <Link 
+                            href={`/shop?search=${encodeURIComponent(searchQuery)}`}
+                            onClick={() => setShowResults(false)}
+                            className="block p-3 text-center text-[12px] font-bold uppercase tracking-widest bg-slate-900 text-white hover:bg-black transition-colors"
+                          >
+                            View All {searchQuery}
+                          </Link>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <input
-                    type="text"
-                    placeholder="Search"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && searchQuery.trim()) {
-                        window.location.href = `/shop?search=${encodeURIComponent(searchQuery)}`;
-                      }
-                    }}
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-100 hover:bg-slate-200 rounded-full text-[15px] text-[#111111] placeholder-slate-500 focus:outline-none focus:bg-slate-200 transition-colors"
-                  />
               </div>
 
               {/* Mobile Search Icon */}
