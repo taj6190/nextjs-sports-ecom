@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { FiX, FiHome, FiShoppingBag, FiUser, FiLogOut, FiSettings, FiPackage, FiChevronRight, FiSearch } from "react-icons/fi";
+import { FiX, FiHome, FiShoppingBag, FiUser, FiLogOut, FiSettings, FiPackage, FiChevronRight, FiSearch, FiChevronDown } from "react-icons/fi";
 import { HiOutlineFire } from "react-icons/hi2";
 import { useState, useEffect } from "react";
 import type { ICategory } from "@/types";
