@@ -3,22 +3,22 @@ import { Redis } from '@upstash/redis';
 // Initialize Redis single instance safely
 const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
 const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+const isDev = process.env.NODE_ENV === 'development';
+const enableLocalRedis = process.env.ENABLE_REDIS_LOCAL === 'true';
 
 /**
  * PRODUCTION ROBUSTNESS:
  * We initialize the client only if credentials exist.
- * We also wrap all operations in try-catch to ensure that Redis failures
- * NEVER break the production user experience.
+ * We also disable it in development by default to prevent local network timeouts.
  */
-export const redis = (redisUrl && redisToken) ? new Redis({
+export const redis = (redisUrl && redisToken && (!isDev || enableLocalRedis)) ? new Redis({
   url: redisUrl,
   token: redisToken,
 }) : null;
 
-if (!redis) {
-  if (process.env.NODE_ENV === 'production') {
-    console.warn("⚠️ [Redis] Production credentials missing. Caching is disabled.");
-  }
+// Only warn if we are in production and missing credentials
+if (!redis && !isDev && (redisUrl || redisToken)) {
+  console.warn("⚠️ [Redis] Production credentials detected but initialization failed. Check connectivity.");
 }
 
 /**
@@ -30,27 +30,28 @@ export async function cacheOrQuery<T>(
   queryFn: () => Promise<T>,
   ttlSeconds: number = 3600
 ): Promise<T> {
-  // 1. FAIL-SAFE: If no redis instance or we're in a limited environment
+  // 1. FAIL-SAFE: Skip if no redis instance
   if (!redis) {
     return queryFn();
   }
 
   try {
     // 2. ATTEMPT CACHE RETRIEVAL
-    // We use a timeout to prevent slow Redis from hanging the user request
+    // Increased timeout to 5s for better tolerance in varied network conditions
     const cachedValue = await Promise.race([
       redis.get(key),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("Redis Timeout")), 2000))
-    ]) as string | null;
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000))
+    ]) as T | null;
 
     if (cachedValue) {
-      // Data from Upstash is already deserialized if passed as object, 
-      // but we ensure POJO consistency here.
-      return cachedValue as T;
+      if (isDev) console.log(`[Redis] Hit: ${key}`);
+      return cachedValue;
     }
   } catch (err) {
-    // Fail silently: log and move to DB
-    console.warn(`[Redis] Skip Read [${key}]: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    // Suppress heavy logs in development unless explicitly debugging
+    if (!isDev) {
+      console.warn(`[Redis] Skip Read [${key}]: ${err instanceof Error ? err.message : 'Unknown'}`);
+    }
   }
 
   // 3. FALLBACK TO DATABASE
@@ -58,13 +59,17 @@ export async function cacheOrQuery<T>(
 
   // 4. BACKGROUND CACHE UPDATE (ASYNCHRONOUS)
   if (data !== undefined && data !== null) {
-    // Ensure we are working with clean JSON (no Mongoose internal state, Dates as strings)
-    const cleanData = JSON.parse(JSON.stringify(data));
-    
-    // Fire and forget - do not await to keep response time low
-    redis.set(key, cleanData, { ex: ttlSeconds }).catch((e) => {
-      console.warn(`[Redis] Skip Write [${key}]: ${e instanceof Error ? e.message : 'Internal error'}`);
-    });
+    try {
+      // Ensure clean POJO
+      const cleanData = JSON.parse(JSON.stringify(data));
+      
+      // Fire and forget
+      redis.set(key, cleanData, { ex: ttlSeconds }).catch((e) => {
+        if (!isDev) console.warn(`[Redis] Skip Write [${key}]: ${e instanceof Error ? e.message : 'Internal'}`);
+      });
+    } catch {
+      // Ignored
+    }
   }
 
   return data;
