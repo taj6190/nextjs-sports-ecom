@@ -50,6 +50,7 @@ export default function Footer() {
               <li><Link href="/" className="text-[13px] text-slate-400 hover:text-[#ef4a23] transition-colors">Refund and Return Policy</Link></li>
               <li><Link href="/" className="text-[13px] text-slate-400 hover:text-[#ef4a23] transition-colors">EMI Policy</Link></li>
               <li><Link href="/" className="text-[13px] text-slate-400 hover:text-[#ef4a23] transition-colors">Delivery Options</Link></li>
+              <li><Link href="/track-order" className="text-[13px] text-slate-400 hover:text-[#ef4a23] transition-colors">Track Order</Link></li>
               <li><Link href="/account" className="text-[13px] text-slate-400 hover:text-[#ef4a23] transition-colors">My Account</Link></li>
             </ul>
           </div>

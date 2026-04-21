@@ -119,6 +119,9 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
                 <Link href="/account/orders" onClick={onClose} className="flex items-center gap-3 px-4 py-3 text-[13px] font-bold uppercase text-[#111] hover:bg-slate-50">
                   <FiPackage size={18} className="opacity-50" /> My Orders
                 </Link>
+                <Link href="/track-order" onClick={onClose} className="flex items-center gap-3 px-4 py-3 text-[13px] font-bold uppercase text-[#111] hover:bg-slate-50">
+                  <FiSearch size={18} className="opacity-50" /> Track Order
+                </Link>
                 {isAdmin && (
                   <Link href="/admin" onClick={onClose} className="flex items-center gap-3 px-4 py-3 text-[13px] font-bold uppercase text-blue-600 hover:bg-blue-50">
                     <FiSettings size={18} /> Admin Panel
@@ -133,6 +136,9 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
               </div>
             ) : (
               <div className="px-4 space-y-3">
+                <Link href="/track-order" onClick={onClose} className="block w-full py-3.5 bg-slate-100 text-[#111] text-center font-bold text-[12px] uppercase tracking-widest hover:bg-slate-200 transition-colors">
+                  Track Order
+                </Link>
                 <Link href="/login" onClick={onClose} className="block w-full py-3.5 bg-[#111] text-white text-center font-bold text-[12px] uppercase tracking-widest hover:bg-black transition-colors">
                   Sign In
                 </Link>

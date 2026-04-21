@@ -50,10 +50,8 @@ export const authConfig: NextAuthConfig = {
         return true;
       }
 
-      // Checkout — must be logged in
+      // Checkout — allow guests
       if (pathname.startsWith("/checkout")) {
-        if (!isLoggedIn)
-          return Response.redirect(new URL("/login?callbackUrl=/checkout", nextUrl));
         return true;
       }
 

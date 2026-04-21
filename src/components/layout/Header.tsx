@@ -106,6 +106,12 @@ export default function Header() {
                   New Releases
                 </Link>
                 <Link
+                  href="/track-order"
+                  className="py-2 text-[15px] font-bold text-[#111111] hover:text-[#ef4a23] transition-colors uppercase tracking-tight"
+                >
+                  Track Order
+                </Link>
+                <Link
                   href="/deals"
                   className="flex items-center gap-1 py-2 text-[15px] font-bold text-red-600 hover:opacity-70 transition-opacity uppercase tracking-tight"
                 >

@@ -12,60 +12,53 @@ import { useCartStore } from "@/stores/cartStore";
 import { formatPrice } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
-import { FiCheck, FiTruck, FiShield, FiArrowLeft, FiShoppingBag, FiCreditCard, FiMapPin, FiGift } from "react-icons/fi";
+import { FiShoppingBag, FiTruck, FiShield, FiLock, FiGift, FiArrowLeft } from "react-icons/fi";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { data: session } = useSession();
   const { items, totalPrice, clearCart } = useCartStore();
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState(1); // 1: shipping, 2: review
   const [shipping, setShipping] = useState({
     fullName: "",
     phone: "",
+    email: "",
     address: "",
-    city: "",
-    postalCode: "",
   });
   
   const [couponCodeInput, setCouponCodeInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{ 
     code: string; 
-    discountType: string;
     discountAmount: number;
   } | null>(null);
   const [isApplying, setIsApplying] = useState(false);
 
-  // Pre-fill from user data
+  // Pre-fill from session
   useEffect(() => {
-    if (session?.user?.name) {
-      setShipping(s => ({ ...s, fullName: s.fullName || session.user.name || "" }));
+    if (session?.user) {
+      setShipping(s => ({ 
+        ...s, 
+        fullName: s.fullName || session.user?.name || "",
+        email: s.email || session.user?.email || ""
+      }));
     }
   }, [session]);
 
   const subtotal = totalPrice();
-  // Rely exclusively on API supplied subtotal maths:
   const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
   const shippingCost = subtotal >= 5000 ? 0 : 120;
   const total = subtotal - discount + shippingCost;
 
-  const validateShipping = () => {
+  const validate = () => {
     if (!shipping.fullName.trim()) { toast.error("Full name is required"); return false; }
     if (!shipping.phone.trim()) { toast.error("Phone number is required"); return false; }
-    if (!/^01[3-9]\d{8}$/.test(shipping.phone.replace(/\s/g, ""))) { toast.error("Enter a valid Bangladesh phone number (01XXXXXXXXX)"); return false; }
-    if (!shipping.address.trim()) { toast.error("Address is required"); return false; }
-    if (!shipping.city.trim()) { toast.error("City is required"); return false; }
-    if (!shipping.postalCode.trim()) { toast.error("Postal code is required"); return false; }
+    if (!/^01[3-9]\d{8}$/.test(shipping.phone.replace(/\s/g, ""))) { toast.error("Enter a valid BD phone number"); return false; }
+    if (!shipping.address.trim()) { toast.error("Delivery address is required"); return false; }
     return true;
-  };
-
-  const handleProceedToReview = () => {
-    if (validateShipping()) setStep(2);
   };
 
   const handleApplyCoupon = async () => {
     if (!couponCodeInput.trim()) { toast.error("Enter a promo code"); return; }
-    
     setIsApplying(true);
     try {
       const res = await fetch("/api/coupons/validate", {
@@ -95,14 +88,9 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleRemoveCoupon = () => {
-    setAppliedCoupon(null);
-    toast.success("Coupon removed");
-  };
-
   const handleOrder = async () => {
-    if (items.length === 0) { toast.error("Your cart is empty"); return; }
-    if (!validateShipping()) return;
+    if (items.length === 0) { toast.error("Cart is empty"); return; }
+    if (!validate()) return;
 
     setLoading(true);
     try {
@@ -115,7 +103,11 @@ export default function CheckoutPage() {
             sku: item.variant.sku,
             quantity: item.quantity,
           })),
-          shippingAddress: shipping,
+          shippingAddress: {
+            ...shipping,
+            city: "General", // Default since field removed
+            postalCode: "0000" // Default since field removed
+          },
           paymentMethod: "cod",
           couponCode: appliedCoupon?.code,
         }),
@@ -124,13 +116,17 @@ export default function CheckoutPage() {
       const json = await res.json();
       if (json.success) {
         clearCart();
-        toast.success("Order placed successfully! 🎉");
-        router.push("/account/orders");
+        toast.success("Order secured successfully!");
+        if (session) {
+          router.push("/account/orders");
+        } else {
+          router.push(`/checkout/success?orderNumber=${json.data.orderNumber}`);
+        }
       } else {
-        toast.error(json.error || "Failed to place order");
+        toast.error(json.error || "Order failed");
       }
     } catch {
-      toast.error("Something went wrong");
+      toast.error("Connection error");
     } finally {
       setLoading(false);
     }
@@ -138,16 +134,13 @@ export default function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-[#F2F4F8]">
+      <div className="min-h-screen bg-white">
         <Header />
-        <main className="max-w-2xl mx-auto px-4 py-20 text-center">
-          <div className="w-20 h-20 mx-auto bg-slate-50 border-slate-200 rounded-2xl flex items-center justify-center mb-4">
-            <FiShoppingBag className="text-slate-600" size={32} />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Your cart is empty</h1>
-          <p className="text-slate-600 mb-6">Add some products to continue to checkout.</p>
-          <Link href="/shop" className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-slate-900 rounded-xl transition-all">
-            Browse Products
+        <main className="max-w-xl mx-auto px-6 py-32 text-center space-y-6">
+          <FiShoppingBag className="mx-auto text-slate-100" size={100} />
+          <h1 className="text-2xl font-black uppercase tracking-tight italic">Your Bag is Empty</h1>
+          <Link href="/shop" className="block w-full py-4 bg-[#111] text-white font-bold uppercase tracking-widest hover:bg-slate-800 transition-all">
+            Browse Gear
           </Link>
         </main>
         <Footer />
@@ -156,238 +149,182 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F2F4F8]">
+    <div className="min-h-screen bg-[#F8F9FA]">
       <Header />
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-        {/* Checkout Steps */}
-        <div className="flex items-center justify-center gap-4 mb-8">
-          {[
-            { num: 1, label: "Shipping" },
-            { num: 2, label: "Review & Pay" },
-          ].map((s) => (
-            <div key={s.num} className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                step >= s.num ? "bg-blue-500 text-white" : "bg-slate-100 text-slate-500"
-              }`}>
-                {step > s.num ? <FiCheck /> : s.num}
-              </div>
-              <span className={`text-sm font-medium ${step >= s.num ? "text-slate-900" : "text-slate-500"}`}>
-                {s.label}
-              </span>
-              {s.num < 2 && <div className={`w-16 h-0.5 ${step > s.num ? "bg-blue-500" : "bg-slate-100"}`} />}
-            </div>
-          ))}
-        </div>
+      
+      <main className="max-w-[1400px] mx-auto px-4 md:px-8 py-10 lg:py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          
+          {/* Left Side: Information */}
+          <div className="lg:col-span-7 space-y-10">
+            <header className="space-y-2">
+              <h1 className="text-4xl font-black italic tracking-tighter text-[#111] uppercase">Secure Checkout</h1>
+              <p className="text-slate-500 font-medium">Finalize your order by providing delivery details below.</p>
+            </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Section */}
-          <div className="lg:col-span-2 space-y-6">
-            {step === 1 && (
-              <div className="bg-white shadow-sm border border-slate-200 rounded-2xl p-6 space-y-4 animate-fade-in">
-                <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-                  <FiMapPin className="text-blue-400" /> Shipping Address
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input label="Full Name *" value={shipping.fullName} onChange={(e) => setShipping({ ...shipping, fullName: e.target.value })} required id="shipping-name" placeholder="Enter your full name" />
-                  <Input label="Phone Number *" type="tel" value={shipping.phone} onChange={(e) => setShipping({ ...shipping, phone: e.target.value })} required id="shipping-phone" placeholder="01XXXXXXXXX" />
+            <section className="bg-white border border-slate-200 p-8 shadow-sm">
+              <h2 className="text-[13px] font-black uppercase tracking-[0.2em] text-[#ef4a23] mb-8 flex items-center gap-2">
+                <span className="w-6 h-[2px] bg-[#ef4a23]" /> 01 Delivery Information
+              </h2>
+              
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Input 
+                    label="Full Name *" 
+                    placeholder="John Doe"
+                    value={shipping.fullName} 
+                    onChange={(e) => setShipping({ ...shipping, fullName: e.target.value })} 
+                    className="border-slate-200 focus:border-black rounded-none"
+                    id="checkout-name" 
+                  />
+                  <Input 
+                    label="Phone Number *" 
+                    type="tel" 
+                    placeholder="01XXXXXXXXX"
+                    value={shipping.phone} 
+                    onChange={(e) => setShipping({ ...shipping, phone: e.target.value })} 
+                    className="border-slate-200 focus:border-black rounded-none"
+                    id="checkout-phone" 
+                  />
                 </div>
-                <Input label="Full Address *" value={shipping.address} onChange={(e) => setShipping({ ...shipping, address: e.target.value })} placeholder="House/Flat, Road, Area, Landmark" required id="shipping-address" />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                <Input 
+                  label="Email Address (Optional)" 
+                  type="email" 
+                  placeholder="name@email.com"
+                  value={shipping.email} 
+                  onChange={(e) => setShipping({ ...shipping, email: e.target.value })} 
+                  className="border-slate-200 focus:border-black rounded-none"
+                  id="checkout-email" 
+                />
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Delivery Address *</label>
+                  <textarea 
+                    placeholder="House/Appartment, Road, Area, City"
+                    value={shipping.address}
+                    onChange={(e) => setShipping({ ...shipping, address: e.target.value })}
+                    className="w-full px-4 py-4 bg-white border border-slate-200 focus:border-black focus:outline-none min-h-[120px] transition-all resize-none font-medium"
+                    id="checkout-address"
+                  />
+                  <p className="text-[10px] text-slate-400 font-medium italic">Please include your city and specific landmarks for faster delivery.</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="bg-white border border-slate-200 p-8 shadow-sm">
+              <h2 className="text-[13px] font-black uppercase tracking-[0.2em] text-[#ef4a23] mb-6 flex items-center gap-2">
+                <span className="w-6 h-[2px] bg-[#ef4a23]" /> 02 Payment Selection
+              </h2>
+              <div className="p-5 border-2 border-[#111] bg-slate-50 flex items-center justify-between group">
+                <div className="flex items-center gap-4">
+                  <div className="w-5 h-5 border-4 border-[#111] rounded-full" />
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">City *</label>
-                    <select value={shipping.city} onChange={(e) => setShipping({ ...shipping, city: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-slate-50 border-slate-200 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer">
-                      <option value="">Select City</option>
-                      {["Dhaka", "Chittagong", "Sylhet", "Rajshahi", "Khulna", "Rangpur", "Barishal", "Mymensingh", "Comilla", "Gazipur", "Narayanganj"].map(c => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
+                    <p className="font-black text-[#111] uppercase text-sm tracking-tight italic">Cash on Delivery (COD)</p>
+                    <p className="text-xs text-slate-500 font-medium tracking-tight">Pay securely when your package arrives.</p>
                   </div>
-                  <Input label="Postal Code *" value={shipping.postalCode} onChange={(e) => setShipping({ ...shipping, postalCode: e.target.value })} required id="shipping-postal" placeholder="1205" />
                 </div>
-                <div className="pt-2">
-                  <Button onClick={handleProceedToReview} size="lg" className="w-full">
-                    Continue to Review
-                  </Button>
-                </div>
+                <FiTruck className="text-[#111]" size={24} />
               </div>
-            )}
-
-            {step === 2 && (
-              <>
-                {/* Review Shipping */}
-                <div className="bg-white shadow-sm border border-slate-200 rounded-2xl p-6 animate-fade-in">
-                  <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-                      <FiMapPin className="text-blue-400" /> Delivery To
-                    </h2>
-                    <button onClick={() => setStep(1)} className="text-xs text-blue-400 hover:text-blue-300 cursor-pointer">Edit</button>
-                  </div>
-                  <div className="p-4 bg-slate-100 rounded-xl text-sm">
-                    <p className="font-medium text-slate-900">{shipping.fullName}</p>
-                    <p className="text-slate-600">{shipping.phone}</p>
-                    <p className="text-slate-600">{shipping.address}</p>
-                    <p className="text-slate-600">{shipping.city} - {shipping.postalCode}</p>
-                  </div>
-                </div>
-
-                {/* Order Items Review */}
-                <div className="bg-white shadow-sm border border-slate-200 rounded-2xl p-6 animate-fade-in">
-                  <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                    <FiShoppingBag className="text-blue-400" /> Order Items ({items.length})
-                  </h2>
-                  <div className="space-y-3">
-                    {items.map((item) => (
-                      <div key={item.variant.sku} className="flex items-center gap-4 p-3 bg-slate-100 rounded-xl">
-                        <div className="w-16 h-16 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
-                          {item.productImage ? (
-                            <Image src={item.productImage} alt={item.productName} width={64} height={64} className="object-cover w-full h-full" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-slate-600 text-xs">N/A</div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-900 line-clamp-1">{item.productName}</p>
-                          <p className="text-xs text-slate-500">
-                            {Object.values(item.variant.combination).join(", ")} × {item.quantity}
-                          </p>
-                        </div>
-                        <span className="text-sm font-bold text-slate-900 whitespace-nowrap">{formatPrice(item.variant.price * item.quantity)}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Payment Method */}
-                <div className="bg-white shadow-sm border border-slate-200 rounded-2xl p-6 animate-fade-in">
-                  <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                    <FiCreditCard className="text-blue-400" /> Payment Method
-                  </h2>
-                  <label className="flex items-center gap-3 p-4 border-2 border-blue-500 bg-blue-500/5 rounded-xl cursor-pointer">
-                    <input type="radio" checked readOnly className="text-blue-600" />
-                    <div className="flex-1">
-                      <span className="text-sm font-medium text-slate-900">Cash on Delivery (COD)</span>
-                      <p className="text-xs text-slate-500">Pay when you receive your order</p>
-                    </div>
-                    <FiCheck className="text-blue-400" />
-                  </label>
-                  <div className="flex gap-3 mt-3">
-                    <div className="flex-1 p-4 border border-slate-200 rounded-xl opacity-50">
-                      <span className="text-sm text-slate-500">bKash</span>
-                      <span className="ml-2 text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full">Coming Soon</span>
-                    </div>
-                    <div className="flex-1 p-4 border border-slate-200 rounded-xl opacity-50">
-                      <span className="text-sm text-slate-500">Nagad</span>
-                      <span className="ml-2 text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full">Coming Soon</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Place Order */}
-                <div className="flex items-center gap-3">
-                  <button onClick={() => setStep(1)} className="flex items-center gap-2 px-5 py-3 border border-slate-300 text-slate-700 rounded-xl hover:bg-slate-100 transition-all cursor-pointer">
-                    <FiArrowLeft size={16} /> Back
-                  </button>
-                  <Button onClick={handleOrder} isLoading={loading} size="lg" className="flex-1">
-                    <FiShield className="mr-2" /> Place Order • {formatPrice(total)}
-                  </Button>
-                </div>
-              </>
-            )}
+              <p className="mt-4 text-[11px] text-slate-400 font-medium text-center">Digital payment methods are coming soon.</p>
+            </section>
           </div>
 
-          {/* Order Summary Sidebar */}
-          <div>
-            <div className="sticky top-20 bg-white shadow-sm border border-slate-200 rounded-2xl p-6 space-y-4">
-              <h2 className="text-lg font-semibold text-slate-900">Order Summary</h2>
-              <div className="space-y-3 max-h-64 overflow-y-auto">
+          {/* Right Side: Summary */}
+          <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-6">
+            <div className="bg-white border border-slate-200 p-8 shadow-sm">
+              <h3 className="text-xl font-black italic tracking-tighter uppercase mb-8 border-b border-slate-100 pb-4 text-[#111]">Order Summary</h3>
+              
+              <div className="space-y-6 max-h-[350px] overflow-y-auto pr-4 custom-scrollbar mb-8">
                 {items.map((item) => (
-                  <div key={item.variant.sku} className="flex justify-between text-sm">
-                    <div>
-                      <p className="text-slate-900 line-clamp-1">{item.productName}</p>
-                      <p className="text-xs text-slate-500">
-                        {Object.values(item.variant.combination).join(", ")} × {item.quantity}
-                      </p>
+                  <div key={item.variant.sku} className="flex gap-4 group">
+                    <div className="w-16 h-20 bg-slate-50 shrink-0 overflow-hidden relative border border-slate-100">
+                      <Image src={item.productImage} alt={item.productName} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
                     </div>
-                    <span className="text-slate-900 font-medium">{formatPrice(item.variant.price * item.quantity)}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-black uppercase tracking-tight italic line-clamp-1 text-[#111]">{item.productName}</p>
+                      <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-1">
+                        {Object.values(item.variant.combination).join(" / ")} • Qty: {item.quantity}
+                      </p>
+                      <p className="text-sm font-black mt-2 text-[#111]">{formatPrice(item.variant.price * item.quantity)}</p>
+                    </div>
                   </div>
                 ))}
               </div>
-              
-              {/* Promo Code Section */}
-              <div className="pt-4 border-t border-slate-200">
-                {appliedCoupon ? (
-                  <div className="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-                    <div className="flex items-center gap-2 text-emerald-700">
-                      <FiGift />
-                      <span className="text-sm font-bold tracking-wider">{appliedCoupon.code}</span>
-                      <span className="text-xs bg-emerald-100 px-2 py-0.5 rounded-full">
-                        {appliedCoupon.discountType === "percentage" ? "Percentage Off" : "Fixed Discount"}
-                      </span>
-                    </div>
-                    <button onClick={handleRemoveCoupon} className="text-xs text-emerald-600 hover:text-emerald-800 underline">Remove</button>
-                  </div>
-                ) : (
+
+              {/* Promo Section */}
+              <div className="border-t border-slate-100 pt-6 mb-8">
+                {!appliedCoupon ? (
                   <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Promo code"
-                      className="flex-1 px-4 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase text-sm"
+                    <input 
+                      type="text" 
+                      placeholder="PROMO CODE" 
+                      className="flex-1 bg-slate-50 border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:border-black transition-all uppercase font-bold tracking-widest text-[#111] placeholder:text-slate-300"
                       value={couponCodeInput}
                       onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
                     />
-                    <Button onClick={handleApplyCoupon} isLoading={isApplying} variant="secondary" className="px-6 rounded-xl">
-                      Apply
-                    </Button>
+                    <button 
+                      onClick={handleApplyCoupon}
+                      disabled={isApplying}
+                      className="px-6 bg-[#111] text-white font-black text-[11px] uppercase tracking-widest hover:bg-[#ef4a23] transition-all"
+                    >
+                      {isApplying ? "..." : "Apply"}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between p-4 bg-emerald-50 border border-emerald-100">
+                    <span className="text-[11px] font-black italic tracking-widest uppercase text-emerald-600">Coupon "{appliedCoupon.code}" Active</span>
+                    <button onClick={() => setAppliedCoupon(null)} className="text-[10px] font-bold underline text-emerald-600/50 hover:text-emerald-600">Remove</button>
                   </div>
                 )}
               </div>
 
-              <div className="border-t border-slate-200 pt-3 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Subtotal</span>
-                  <span className="text-slate-900">{formatPrice(subtotal)}</span>
+              <div className="space-y-4 pt-4">
+                <div className="flex justify-between items-center text-sm font-bold uppercase tracking-widest text-slate-400">
+                  <span>Subtotal</span>
+                  <span className="text-slate-900 font-bold">{formatPrice(subtotal)}</span>
                 </div>
                 {discount > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-emerald-500 font-medium">Coupon Discount</span>
-                    <span className="text-emerald-500 font-medium">- {formatPrice(discount)}</span>
+                  <div className="flex justify-between items-center text-sm font-bold uppercase tracking-widest text-emerald-500">
+                    <span>Discount</span>
+                    <span className="font-bold">- {formatPrice(discount)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Shipping</span>
-                  <span className={shippingCost === 0 ? "text-emerald-400" : "text-slate-900"}>
-                    {shippingCost === 0 ? "Free ✓" : formatPrice(shippingCost)}
-                  </span>
+                <div className="flex justify-between items-center text-sm font-bold uppercase tracking-widest text-slate-400">
+                  <span>Shipping</span>
+                  <span className="text-slate-900 font-bold">{shippingCost === 0 ? "Free" : formatPrice(shippingCost)}</span>
                 </div>
-                {shippingCost > 0 && (
-                  <p className="text-[11px] text-slate-500">Free shipping on orders over ৳5,000</p>
+                <div className="flex justify-between items-center pt-6 border-t border-slate-100">
+                  <span className="text-xl font-black italic tracking-tighter uppercase text-[#111]">Total Amount</span>
+                  <span className="text-3xl font-black text-[#111]">{formatPrice(total)}</span>
+                </div>
+              </div>
+
+              <button 
+                onClick={handleOrder}
+                disabled={loading}
+                className="w-full mt-10 h-16 bg-[#111] hover:bg-[#ef4a23] text-white font-black uppercase tracking-[0.3em] italic transition-all shadow-xl active:scale-[0.99] flex items-center justify-center gap-3"
+              >
+                {loading ? "Securing Order..." : (
+                  <>
+                    Complete Order <FiShield size={20} />
+                  </>
                 )}
-                <div className="flex justify-between text-lg font-bold border-t border-slate-200 pt-2">
-                  <span className="text-slate-900">Total</span>
-                  <span className="text-slate-900">{formatPrice(total)}</span>
-                </div>
-              </div>
+              </button>
 
-              {/* Trust Badges */}
-              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200">
-                <div className="flex items-center gap-2 text-[10px] text-slate-500">
-                  <FiTruck size={14} className="text-blue-400" />
-                  <span>Fast delivery across BD</span>
-                </div>
-                <div className="flex items-center gap-2 text-[10px] text-slate-500">
-                  <FiShield size={14} className="text-emerald-400" />
-                  <span>100% genuine products</span>
-                </div>
+              <div className="mt-8 flex flex-wrap justify-center gap-6 opacity-40">
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500"><FiTruck /> Fast Shipping</div>
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500"><FiLock /> Safe Payment</div>
               </div>
-
-              <Link href="/shop" className="block text-center text-sm text-blue-400 hover:text-blue-300">
-                ← Continue Shopping
-              </Link>
             </div>
+            
+            <Link href="/shop" className="flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-[#111] transition-colors">
+              <FiArrowLeft /> Back to Shop
+            </Link>
           </div>
         </div>
       </main>
+
       <Footer />
     </div>
   );

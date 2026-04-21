@@ -60,9 +60,6 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
 
     await dbConnect();
     const body = await req.json();
@@ -135,9 +132,13 @@ export async function POST(req: NextRequest) {
         
         let validUserLimit = true;
         if (coupon.usageLimitPerUser) {
-          const userCount = await Order.countDocuments({ user: session.user.id, couponCode: coupon.code });
-          if (userCount >= coupon.usageLimitPerUser) {
-            validUserLimit = false;
+          if (!session) {
+             validUserLimit = false; // Requires login to check user limits
+          } else {
+            const userCount = await Order.countDocuments({ user: session.user.id, couponCode: coupon.code });
+            if (userCount >= coupon.usageLimitPerUser) {
+              validUserLimit = false;
+            }
           }
         }
 
@@ -171,7 +172,7 @@ export async function POST(req: NextRequest) {
 
     const order = await Order.create({
       orderNumber: generateOrderNumber(),
-      user: session.user.id,
+      user: session?.user?.id ? session.user.id : undefined,
       items: validatedItems,
       shippingAddress: body.shippingAddress,
       paymentMethod: body.paymentMethod || "cod",

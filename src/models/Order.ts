@@ -2,7 +2,7 @@ import mongoose, { Schema, models, model } from "mongoose";
 
 export interface IOrderDoc extends mongoose.Document {
   orderNumber: string;
-  user: mongoose.Types.ObjectId;
+  user?: mongoose.Types.ObjectId;
   items: {
     product: mongoose.Types.ObjectId;
     productName: string;
@@ -18,6 +18,7 @@ export interface IOrderDoc extends mongoose.Document {
   }[];
   shippingAddress: {
     fullName: string;
+    email: string;
     phone: string;
     address: string;
     city: string;
@@ -44,7 +45,7 @@ export interface IOrderDoc extends mongoose.Document {
 const OrderSchema = new Schema<IOrderDoc>(
   {
     orderNumber: { type: String, required: true, unique: true },
-    user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    user: { type: Schema.Types.ObjectId, ref: "User", index: true },
     items: [
       {
         product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
@@ -62,10 +63,11 @@ const OrderSchema = new Schema<IOrderDoc>(
     ],
     shippingAddress: {
       fullName: { type: String, required: true },
+      email: { type: String, default: "" },
       phone: { type: String, required: true },
       address: { type: String, required: true },
-      city: { type: String, required: true },
-      postalCode: { type: String, required: true },
+      city: { type: String, default: "" },
+      postalCode: { type: String, default: "" },
     },
     paymentMethod: { type: String, enum: ["cod", "bkash", "nagad"], default: "cod" },
     paymentStatus: { type: String, enum: ["pending", "paid", "failed"], default: "pending" },
