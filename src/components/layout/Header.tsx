@@ -160,7 +160,7 @@ export default function Header() {
 
                <div className="flex items-center">
                   <Link href="/account/wishlist" className="relative w-9 h-9 md:w-11 md:h-11 flex items-center justify-center text-[#081621] hover:bg-[#f8f8f8] active:scale-90 group">
-                     <FiHeart size={18} className={wishlistCount > 0 ? "fill-[#ef4a23] text-[#ef4a23]" : ""} />
+                     <FiHeart size={18} className={isClient && wishlistCount > 0 ? "fill-[#ef4a23] text-[#ef4a23]" : ""} />
                      {isClient && wishlistCount > 0 && (
                        <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-[#ef4a23] text-white text-[7px] md:text-[9px] font-black flex items-center justify-center italic">
                          {wishlistCount}

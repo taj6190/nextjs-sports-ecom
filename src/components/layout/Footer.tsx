@@ -83,8 +83,8 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 pt-6 border-t border-[#1b3446] flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-[13px] text-slate-500">
-            © {new Date().getFullYear()} ElectroMart Ltd. | All rights reserved.
+          <p className="text-[13px] text-slate-500" suppressHydrationWarning>
+            © {new Date().getFullYear()} VELOCITY Gear. | All rights reserved.
           </p>
           <div className="text-[13px] text-slate-500 flex items-center gap-1">
             Developed with <span className="text-[#ef4a23] text-lg">♥</span> for premium tech
