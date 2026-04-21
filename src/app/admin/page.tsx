@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { formatPrice } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
-import { FiDollarSign, FiShoppingCart, FiBox, FiUsers, FiTrendingUp, FiAlertTriangle, FiBarChart2 } from "react-icons/fi";
+import { formatPrice } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { FiAlertTriangle, FiBarChart2, FiBox, FiDollarSign, FiShoppingCart, FiTrendingUp } from "react-icons/fi";
 
 interface AnalyticsData {
   totalRevenue: number;

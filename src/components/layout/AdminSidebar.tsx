@@ -1,11 +1,23 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
 import {
-  FiGrid, FiBox, FiTag, FiSliders, FiShoppingCart, FiGift,
-  FiDatabase, FiArrowLeft, FiTrash2, FiBarChart2, FiZap, FiBookmark, FiStar,
+    FiArrowLeft,
+    FiBarChart2,
+    FiBookmark,
+    FiBox,
+    FiDatabase,
+    FiGift,
+    FiGrid,
+    FiShoppingCart,
+    FiSliders,
+    FiStar,
+    FiTag,
+    FiTrash2,
+    FiUsers,
+    FiZap,
 } from "react-icons/fi";
 import { HiOutlineBolt } from "react-icons/hi2";
 
@@ -16,6 +28,7 @@ const navItems = [
   { href: "/admin/brands", label: "Brands", icon: FiBookmark },
   { href: "/admin/attributes", label: "Attributes", icon: FiSliders },
   { href: "/admin/orders", label: "Orders", icon: FiShoppingCart },
+  { href: "/admin/users", label: "Users", icon: FiUsers },
   { href: "/admin/deals", label: "Today's Deals", icon: FiZap },
   { href: "/admin/coupons", label: "Coupons", icon: FiGift },
   { href: "/admin/reviews", label: "Reviews", icon: FiStar },
