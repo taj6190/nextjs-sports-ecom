@@ -20,9 +20,9 @@ export const redis = (redisUrl && redisToken && !isBuildPhase && (!isDev || enab
   token: redisToken,
 }) : null;
 
-// Only warn if we are in production and missing credentials
-if (!redis && !isDev && (redisUrl || redisToken)) {
-  console.warn("⚠️ [Redis] Production credentials detected but initialization failed. Check connectivity.");
+// Only warn if we are in production, not building, and missing initialization
+if (!redis && !isDev && !isBuildPhase && (redisUrl || redisToken)) {
+  console.warn("⚠️ [Redis] Production initialization skipped. Ensure environment variables are correct.");
 }
 
 /**
