@@ -9,6 +9,7 @@ import ReviewSection from "@/components/product/ReviewSection";
 import dbConnect from "@/lib/db";
 import Product from "@/models/Product";
 import TodaysDeal from "@/models/TodaysDeal";
+import "@/models/Category";
 import type { Metadata } from "next";
 import { cacheOrQuery } from "@/lib/redis";
 
