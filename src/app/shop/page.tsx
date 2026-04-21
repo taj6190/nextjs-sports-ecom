@@ -174,7 +174,19 @@ async function ShopContent({ searchParams }: ShopPageProps) {
       : "All Products";
 
   // Serialise for client components — avoids passing mongoose docs to client
-  const serializedCategories = JSON.parse(JSON.stringify(categories));
+  const serializedCategoriesRaw = JSON.parse(JSON.stringify(categories));
+
+  // Build recursive tree for filters
+  const buildCategoryTree = (nodes: any[], parentId: string | null = null): any[] => {
+    return nodes
+      .filter((n) => (n.parent ? n.parent.toString() : null) === parentId)
+      .map((n) => ({
+        ...n,
+        children: buildCategoryTree(nodes, n._id.toString()),
+      }));
+  };
+
+  const categoryTree = buildCategoryTree(serializedCategoriesRaw);
   const serializedAttributes = JSON.parse(JSON.stringify(attributes));
   const filteredBrands = (brands as string[]).filter(Boolean);
 
@@ -201,7 +213,7 @@ async function ShopContent({ searchParams }: ShopPageProps) {
           {/* ── Sidebar — desktop ── */}
           <aside className="hidden lg:block w-[240px] flex-shrink-0 sticky top-[88px] self-start space-y-4">
              <ProductFilters
-                categories={serializedCategories}
+                categories={categoryTree}
                 attributes={serializedAttributes}
                 brands={filteredBrands}
                 variant="desktop"
@@ -216,7 +228,7 @@ async function ShopContent({ searchParams }: ShopPageProps) {
               <div className="flex items-center">
                 <div className="lg:hidden">
                   <ProductFilters
-                    categories={serializedCategories}
+                    categories={categoryTree}
                     attributes={serializedAttributes}
                     brands={filteredBrands}
                     variant="mobile"

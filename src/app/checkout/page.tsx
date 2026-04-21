@@ -1,18 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
-import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import Header from "@/components/layout/Header";
 import Input from "@/components/ui/Input";
-import Button from "@/components/ui/Button";
-import { useCartStore } from "@/stores/cartStore";
 import { formatPrice } from "@/lib/utils";
-import toast from "react-hot-toast";
+import { useCartStore } from "@/stores/cartStore";
 import { useSession } from "next-auth/react";
-import { FiShoppingBag, FiTruck, FiShield, FiLock, FiGift, FiArrowLeft } from "react-icons/fi";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { FiArrowLeft, FiLock, FiShield, FiShoppingBag, FiTruck } from "react-icons/fi";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -25,10 +24,10 @@ export default function CheckoutPage() {
     email: "",
     address: "",
   });
-  
+
   const [couponCodeInput, setCouponCodeInput] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<{ 
-    code: string; 
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
     discountAmount: number;
   } | null>(null);
   const [isApplying, setIsApplying] = useState(false);
@@ -36,8 +35,8 @@ export default function CheckoutPage() {
   // Pre-fill from session
   useEffect(() => {
     if (session?.user) {
-      setShipping(s => ({ 
-        ...s, 
+      setShipping(s => ({
+        ...s,
         fullName: s.fullName || session.user?.name || "",
         email: s.email || session.user?.email || ""
       }));
@@ -64,7 +63,7 @@ export default function CheckoutPage() {
       const res = await fetch("/api/coupons/validate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           code: couponCodeInput,
           cartItems: items.map(item => ({
             productId: item.productId,
@@ -151,10 +150,10 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-[#F8F9FA]">
       <Header />
-      
+
       <main className="max-w-[1400px] mx-auto px-4 md:px-8 py-10 lg:py-16">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-          
+
           {/* Left Side: Information */}
           <div className="lg:col-span-7 space-y-10">
             <header className="space-y-2">
@@ -166,41 +165,41 @@ export default function CheckoutPage() {
               <h2 className="text-[13px] font-black uppercase tracking-[0.2em] text-[#ef4a23] mb-8 flex items-center gap-2">
                 <span className="w-6 h-[2px] bg-[#ef4a23]" /> 01 Delivery Information
               </h2>
-              
+
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Input 
-                    label="Full Name *" 
+                  <Input
+                    label="Full Name *"
                     placeholder="John Doe"
-                    value={shipping.fullName} 
-                    onChange={(e) => setShipping({ ...shipping, fullName: e.target.value })} 
+                    value={shipping.fullName}
+                    onChange={(e) => setShipping({ ...shipping, fullName: e.target.value })}
                     className="border-slate-200 focus:border-black rounded-none"
-                    id="checkout-name" 
+                    id="checkout-name"
                   />
-                  <Input 
-                    label="Phone Number *" 
-                    type="tel" 
+                  <Input
+                    label="Phone Number *"
+                    type="tel"
                     placeholder="01XXXXXXXXX"
-                    value={shipping.phone} 
-                    onChange={(e) => setShipping({ ...shipping, phone: e.target.value })} 
+                    value={shipping.phone}
+                    onChange={(e) => setShipping({ ...shipping, phone: e.target.value })}
                     className="border-slate-200 focus:border-black rounded-none"
-                    id="checkout-phone" 
+                    id="checkout-phone"
                   />
                 </div>
-                
-                <Input 
-                  label="Email Address (Optional)" 
-                  type="email" 
+
+                <Input
+                  label="Email Address (Optional)"
+                  type="email"
                   placeholder="name@email.com"
-                  value={shipping.email} 
-                  onChange={(e) => setShipping({ ...shipping, email: e.target.value })} 
+                  value={shipping.email}
+                  onChange={(e) => setShipping({ ...shipping, email: e.target.value })}
                   className="border-slate-200 focus:border-black rounded-none"
-                  id="checkout-email" 
+                  id="checkout-email"
                 />
 
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Delivery Address *</label>
-                  <textarea 
+                  <textarea
                     placeholder="House/Appartment, Road, Area, City"
                     value={shipping.address}
                     onChange={(e) => setShipping({ ...shipping, address: e.target.value })}
@@ -234,7 +233,7 @@ export default function CheckoutPage() {
           <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-6">
             <div className="bg-white border border-slate-200 p-8 shadow-sm">
               <h3 className="text-xl font-black italic tracking-tighter uppercase mb-8 border-b border-slate-100 pb-4 text-[#111]">Order Summary</h3>
-              
+
               <div className="space-y-6 max-h-[350px] overflow-y-auto pr-4 custom-scrollbar mb-8">
                 {items.map((item) => (
                   <div key={item.variant.sku} className="flex gap-4 group">
@@ -256,14 +255,14 @@ export default function CheckoutPage() {
               <div className="border-t border-slate-100 pt-6 mb-8">
                 {!appliedCoupon ? (
                   <div className="flex gap-2">
-                    <input 
-                      type="text" 
-                      placeholder="PROMO CODE" 
+                    <input
+                      type="text"
+                      placeholder="PROMO CODE"
                       className="flex-1 bg-slate-50 border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:border-black transition-all uppercase font-bold tracking-widest text-[#111] placeholder:text-slate-300"
                       value={couponCodeInput}
                       onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
                     />
-                    <button 
+                    <button
                       onClick={handleApplyCoupon}
                       disabled={isApplying}
                       className="px-6 bg-[#111] text-white font-black text-[11px] uppercase tracking-widest hover:bg-[#ef4a23] transition-all"
@@ -300,7 +299,7 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <button 
+              <button
                 onClick={handleOrder}
                 disabled={loading}
                 className="w-full mt-10 h-16 bg-[#111] hover:bg-[#ef4a23] text-white font-black uppercase tracking-[0.3em] italic transition-all shadow-xl active:scale-[0.99] flex items-center justify-center gap-3"
@@ -317,7 +316,7 @@ export default function CheckoutPage() {
                 <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500"><FiLock /> Safe Payment</div>
               </div>
             </div>
-            
+
             <Link href="/shop" className="flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-[#111] transition-colors">
               <FiArrowLeft /> Back to Shop
             </Link>

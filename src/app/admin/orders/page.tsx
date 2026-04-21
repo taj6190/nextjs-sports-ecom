@@ -17,6 +17,8 @@ export default function AdminOrdersPage() {
   const [detailOrder, setDetailOrder] = useState<IOrder | null>(null);
   const [trackingForm, setTrackingForm] = useState({ trackingNumber: "", estimatedDelivery: "", notes: "" });
   const [searchFilter, setSearchFilter] = useState("");
+  const [refundForm, setRefundForm] = useState({ amount: 0, reason: "" });
+  const [refunding, setRefunding] = useState(false);
 
   const fetchOrders = async () => {
     const url = statusFilter ? `/api/orders?limit=100&status=${statusFilter}` : "/api/orders?limit=100";
@@ -51,6 +53,24 @@ export default function AdminOrdersPage() {
       notes: trackingForm.notes,
     });
     setTrackingForm({ trackingNumber: "", estimatedDelivery: "", notes: "" });
+  };
+
+  const handleProcessRefund = async (orderId: string) => {
+    if (refundForm.amount <= 0) return toast.error("Enter a valid amount");
+    setRefunding(true);
+    const res = await fetch(`/api/orders/${orderId}/refund`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(refundForm),
+    });
+    const json = await res.json();
+    setRefunding(false);
+    if (json.success) {
+      toast.success(`Refund of ${formatPrice(refundForm.amount)} processed`);
+      setRefundForm({ amount: 0, reason: "" });
+      fetchOrders();
+      setDetailOrder(json.data);
+    } else toast.error(json.error || "Refund failed");
   };
 
   const statusColors: Record<string, "default" | "success" | "warning" | "danger" | "info"> = {
@@ -224,7 +244,65 @@ export default function AdminOrdersPage() {
               <div className="flex justify-between text-slate-400"><span>Shipping</span><span>{detailOrder.shippingCost === 0 ? "Free" : formatPrice(detailOrder.shippingCost)}</span></div>
               {detailOrder.discount > 0 && <div className="flex justify-between text-emerald-400"><span>Discount</span><span>-{formatPrice(detailOrder.discount)}</span></div>}
               <div className="flex justify-between text-white font-bold border-t border-slate-700 pt-1"><span>Total</span><span>{formatPrice(detailOrder.total)}</span></div>
+              {detailOrder.refundedAmount && detailOrder.refundedAmount > 0 && (
+                <div className="flex justify-between text-red-400 font-bold"><span>Refunded</span><span>-{formatPrice(detailOrder.refundedAmount)}</span></div>
+              )}
             </div>
+
+            {/* Refund Action (Admin only) */}
+            <div className="p-4 bg-red-500/5 border border-red-500/20 rounded-xl space-y-3">
+              <h3 className="text-sm font-semibold text-red-400 flex items-center gap-2">
+                <FiPackage size={14} /> Process Refund
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                <Input 
+                  label="Refund Amount" 
+                  type="number" 
+                  value={refundForm.amount || ""} 
+                  onChange={e => setRefundForm(f => ({ ...f, amount: Number(e.target.value) }))} 
+                  placeholder="0.00" 
+                  id="refund-amount" 
+                  className="bg-slate-900/50 border-slate-700"
+                />
+                <Input 
+                  label="Reason" 
+                  value={refundForm.reason} 
+                  onChange={e => setRefundForm(f => ({ ...f, reason: e.target.value }))} 
+                  placeholder="Defective, Return, etc." 
+                  id="refund-reason" 
+                  className="bg-slate-900/50 border-slate-700"
+                />
+              </div>
+              <Button 
+                onClick={() => handleProcessRefund(detailOrder._id)} 
+                isLoading={refunding} 
+                variant="danger" 
+                className="w-full text-xs"
+              >
+                Execute Refund
+              </Button>
+              <p className="text-[10px] text-slate-500 text-center uppercase tracking-widest">
+                Max available: {formatPrice(detailOrder.total - (detailOrder.refundedAmount || 0))}
+              </p>
+            </div>
+
+            {/* Refund History */}
+            {detailOrder.refunds && detailOrder.refunds.length > 0 && (
+              <div>
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">Refund History</h3>
+                <div className="space-y-2">
+                  {detailOrder.refunds.map((r, i) => (
+                    <div key={i} className="p-3 bg-red-500/5 border border-red-500/10 rounded-xl flex justify-between items-center">
+                      <div>
+                        <p className="text-sm font-bold text-red-400">-{formatPrice(r.amount)}</p>
+                        <p className="text-[10px] text-slate-500 italic">{r.reason}</p>
+                      </div>
+                      <span className="text-[10px] text-slate-600">{new Date(r.timestamp).toLocaleDateString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </Modal>

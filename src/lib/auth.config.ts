@@ -3,7 +3,7 @@ import type { NextAuthConfig } from "next-auth";
 /**
  * Edge-compatible auth config — no Node.js-only imports (no mongoose, no bcryptjs).
  * Used by:
- *  - middleware.ts (Edge runtime) — for route protection
+ *  - proxy.ts (Edge runtime) — for route protection
  *  - auth.ts (Node runtime) — spread in as base config
  */
 export const authConfig: NextAuthConfig = {
@@ -12,7 +12,7 @@ export const authConfig: NextAuthConfig = {
     signIn: "/login",
   },
   callbacks: {
-    // Must be here so edge middleware can read role from the JWT
+    // Must be here so edge proxy can read role from the JWT
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id as string;

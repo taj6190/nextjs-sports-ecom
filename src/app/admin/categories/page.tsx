@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
@@ -143,7 +143,7 @@ export default function AdminCategoriesPage() {
             </thead>
             <tbody>
               {categories.map((cat) => (
-                <>
+                <Fragment key={cat._id}>
                   <tr key={cat._id} className="border-b border-slate-800/50 hover:bg-slate-800/20">
                     <td className="py-3 px-3">
                       <input type="checkbox" checked={selectedIds.has(cat._id)} onChange={() => toggleSelect(cat._id)}
@@ -190,7 +190,7 @@ export default function AdminCategoriesPage() {
                       </td>
                     </tr>
                   ))}
-                </>
+                </Fragment>
               ))}
               {categories.length === 0 && (
                 <tr><td colSpan={6} className="py-10 text-center text-slate-500">No categories yet</td></tr>

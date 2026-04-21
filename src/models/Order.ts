@@ -40,6 +40,15 @@ export interface IOrderDoc extends mongoose.Document {
   discount: number;
   couponCode?: string;
   total: number;
+  refunds?: {
+    amount: number;
+    reason: string;
+    status: "pending" | "completed" | "failed";
+    timestamp: Date;
+    processedBy?: mongoose.Types.ObjectId;
+  }[];
+  isRefunded?: boolean;
+  refundedAmount?: number;
 }
 
 const OrderSchema = new Schema<IOrderDoc>(
@@ -91,6 +100,17 @@ const OrderSchema = new Schema<IOrderDoc>(
     discount: { type: Number, default: 0 },
     couponCode: { type: String },
     total: { type: Number, required: true },
+    refunds: [
+      {
+        amount: { type: Number, required: true },
+        reason: { type: String, default: "" },
+        status: { type: String, enum: ["pending", "completed", "failed"], default: "completed" },
+        timestamp: { type: Date, default: Date.now },
+        processedBy: { type: Schema.Types.ObjectId, ref: "User" },
+      },
+    ],
+    isRefunded: { type: Boolean, default: false },
+    refundedAmount: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

@@ -145,6 +145,15 @@ export interface IOrder {
   shippingCost: number;
   discount: number;
   total: number;
+  refunds?: {
+    amount: number;
+    reason: string;
+    status: string;
+    timestamp: string;
+    processedBy?: string;
+  }[];
+  isRefunded?: boolean;
+  refundedAmount?: number;
   createdAt: string;
   updatedAt: string;
 }

@@ -34,6 +34,26 @@ export function cn(...classes: (string | boolean | undefined | null)[]): string 
   return classes.filter(Boolean).join(" ");
 }
 
+export function optimizeCloudinaryUrl(url: string, width?: number, height?: number): string {
+  if (!url || typeof url !== "string" || !url.includes("res.cloudinary.com")) return url;
+
+  // Prevent double optimization
+  if (url.includes("/f_auto,q_auto")) return url;
+
+  const parts = url.split("/upload/");
+  if (parts.length !== 2) return url;
+
+  const transformations = [
+    "f_auto",
+    "q_auto",
+    width ? `w_${width}` : "",
+    height ? `h_${height}` : "",
+    "c_limit"
+  ].filter(Boolean).join(",");
+
+  return `${parts[0]}/upload/${transformations}/${parts[1]}`;
+}
+
 export function truncate(str: string, length: number): string {
   if (str.length <= length) return str;
   return str.slice(0, length) + "...";

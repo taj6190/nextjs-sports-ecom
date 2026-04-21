@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { IImage } from "@/types";
+import Image from "next/image";
+import { useState } from "react";
 import { FiChevronLeft, FiChevronRight, FiZoomIn } from "react-icons/fi";
 
 interface ProductGalleryProps {

@@ -23,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${roboto.variable} font-sans bg-white text-[#111111] antialiased`}>
+      <body className={`${roboto.variable} font-sans bg-white text-[#111111] antialiased`} suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>

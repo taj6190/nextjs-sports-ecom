@@ -5,6 +5,7 @@ import Order from "@/models/Order";
 import Product from "@/models/Product";
 import Coupon from "@/models/Coupon";
 import { generateOrderNumber } from "@/lib/utils";
+import { sendOrderConfirmationEmail } from "@/lib/email";
 
 // GET /api/orders
 export async function GET(req: NextRequest) {
@@ -193,6 +194,14 @@ export async function POST(req: NextRequest) {
     if (appliedCoupon) {
       appliedCoupon.usedCount += 1;
       await appliedCoupon.save();
+    }
+
+    // FIRE AND FORGET EMAIL NOTIFICATION
+    // This runs in the background while the response is sent back to the user
+    if (order.shippingAddress.email) {
+      sendOrderConfirmationEmail(order).catch((err) =>
+        console.error("Delayed email send error:", err)
+      );
     }
 
     return NextResponse.json({ success: true, data: order }, { status: 201 });

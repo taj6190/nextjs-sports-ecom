@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { FiX, FiMinus, FiPlus, FiShoppingBag, FiTrash2, FiBox } from "react-icons/fi";
 import { useCartStore } from "@/stores/cartStore";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, optimizeCloudinaryUrl } from "@/lib/utils";
 import Button from "../ui/Button";
 
 export default function CartDrawer() {
@@ -100,7 +100,7 @@ export default function CartDrawer() {
                   {/* Thumb */}
                   <div className="relative w-16 h-20 bg-slate-50 flex-shrink-0 border border-slate-100 overflow-hidden">
                     {item.productImage ? (
-                      <Image src={item.productImage} alt={item.productName} fill className="object-cover transition-transform group-hover:scale-105" />
+                      <Image src={optimizeCloudinaryUrl(item.productImage, 150)} alt={item.productName} fill className="object-cover transition-transform group-hover:scale-105" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-slate-300"><FiBox size={20} /></div>
                     )}

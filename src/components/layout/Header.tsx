@@ -7,6 +7,7 @@ import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { FiHeart, FiLogOut, FiMenu, FiSearch, FiSettings, FiShoppingCart, FiUser } from "react-icons/fi";
+import { optimizeCloudinaryUrl } from "@/lib/utils";
 import CartDrawer from "../cart/CartDrawer";
 import MobileNav from "./MobileNav";
 
@@ -31,12 +32,14 @@ export default function Header() {
 
   const isAdmin = session?.user?.role === "admin";
 
+  const userId = session?.user?.id;
+
   useEffect(() => {
     setIsClient(true);
-    if (session?.user) {
+    if (userId) {
       syncWishlist();
     }
-  }, [session, syncWishlist]);
+  }, [userId, syncWishlist]);
 
   useEffect(() => {
     fetch("/api/categories?tree=true")
@@ -160,7 +163,7 @@ export default function Header() {
                                 className="flex items-center gap-4 p-3 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-none"
                               >
                                 <div className="w-12 h-12 bg-slate-50 shrink-0 overflow-hidden">
-                                  <img src={product.images[0]?.url} alt={product.name} className="w-full h-full object-cover" />
+                                  <img src={optimizeCloudinaryUrl(product.images[0]?.url, 100, 100)} alt={product.name} className="w-full h-full object-cover" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <h4 className="text-[13px] font-bold text-[#111] truncate">{product.name}</h4>
