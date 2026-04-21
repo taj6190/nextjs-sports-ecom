@@ -6,12 +6,16 @@ const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 const isDev = process.env.NODE_ENV === 'development';
 const enableLocalRedis = process.env.ENABLE_REDIS_LOCAL === 'true';
 
+// Detecting the Next.js build phase to prevent "Dynamic server usage" errors during SSG
+const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
+
 /**
  * PRODUCTION ROBUSTNESS:
  * We initialize the client only if credentials exist.
- * We also disable it in development by default to prevent local network timeouts.
+ * We also disable it in development by default and during the BUILD PHASE
+ * to prevent Next.js from throwing "Dynamic server usage" errors.
  */
-export const redis = (redisUrl && redisToken && (!isDev || enableLocalRedis)) ? new Redis({
+export const redis = (redisUrl && redisToken && !isBuildPhase && (!isDev || enableLocalRedis)) ? new Redis({
   url: redisUrl,
   token: redisToken,
 }) : null;
