@@ -254,6 +254,7 @@ export interface ProductFilters {
 export interface WishlistStore {
   items: string[];
   isLoaded: boolean;
+  isFetching: boolean;
   setItems: (items: string[]) => void;
   toggleItem: (productId: string) => void;
   hasItem: (productId: string) => boolean;

@@ -10,28 +10,30 @@ const { auth: authProxy } = NextAuth(authConfig);
 
 export default authProxy((req) => {
   const response = NextResponse.next();
+  const isDev = process.env.NODE_ENV === "development";
 
   // 1. GEO-DETECTION (Vercel Edge)
+  // Skip cookie setting during local development to prevent potential hydration loops/flicker
   const country = req.headers.get("x-vercel-ip-country") || "BD";
   const city = req.headers.get("x-vercel-ip-city") || "Dhaka";
 
   response.headers.set("x-geo-country", country);
   response.headers.set("x-geo-city", city);
 
-  // Set Cookie for Client Components only if changed
-  const geoValue = `${country}:${city}`;
-  const existingGeo = req.cookies.get("geo-region")?.value;
-
-  if (existingGeo !== geoValue) {
-    response.cookies.set("geo-region", geoValue, {
-      maxAge: 86400,
-      path: "/",
-      sameSite: "lax",
-    });
+  if (!isDev) {
+    const geoValue = `${country}:${city}`;
+    const existingGeo = req.cookies.get("geo-region")?.value;
+    if (existingGeo !== geoValue) {
+      response.cookies.set("geo-region", geoValue, {
+        maxAge: 86400,
+        path: "/",
+        sameSite: "lax",
+      });
+    }
   }
 
   // 2. MODERN PRODUCTION SECURITY HEADERS
-  const securityHeaders = {
+  const securityHeaders: Record<string, string> = {
     "X-DNS-Prefetch-Control": "on",
     "X-Frame-Options": "SAMEORIGIN",
     "X-Content-Type-Options": "nosniff",

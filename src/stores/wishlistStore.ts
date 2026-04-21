@@ -1,11 +1,10 @@
 import { create } from "zustand";
 import type { WishlistStore } from "@/types";
 
-let isFetchingWishlist = false;
-
 export const useWishlistStore = create<WishlistStore>()((set, get) => ({
   items: [],
   isLoaded: false,
+  isFetching: false,
 
   setItems: (items: string[]) => set({ items, isLoaded: true }),
 
@@ -39,8 +38,10 @@ export const useWishlistStore = create<WishlistStore>()((set, get) => ({
   hasItem: (productId: string) => get().items.includes(productId),
 
   syncFromServer: async () => {
-    if (get().isLoaded || isFetchingWishlist) return;
-    isFetchingWishlist = true;
+    const { isLoaded, isFetching } = get();
+    if (isLoaded || isFetching) return;
+    
+    set({ isFetching: true });
     try {
       const res = await fetch("/api/wishlist");
       const json = await res.json();
@@ -52,7 +53,7 @@ export const useWishlistStore = create<WishlistStore>()((set, get) => ({
     } catch {
       set({ isLoaded: true });
     } finally {
-      isFetchingWishlist = false;
+      set({ isFetching: false });
     }
   },
 }));

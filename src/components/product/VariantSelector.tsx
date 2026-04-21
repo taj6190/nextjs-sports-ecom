@@ -1,19 +1,16 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { cn, formatPrice, getDiscountPercentage } from "@/lib/utils";
 import { useCartStore } from "@/stores/cartStore";
-import ProductGallery from "./ProductGallery";
-import WhatsAppButton from "./WhatsAppButton";
-import CountdownTimer from "./CountdownTimer";
-import Button from "../ui/Button";
-import Badge from "../ui/Badge";
-import type { IProduct, IVariant, IImage, ITodaysDeal } from "@/types";
-import { FiShoppingCart, FiTruck, FiShield, FiRefreshCw, FiMinus, FiPlus, FiZap } from "react-icons/fi";
+import type { IImage, IProduct, ITodaysDeal, IVariant } from "@/types";
+import { useRouter } from "next/navigation";
+import { useCallback, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import WishlistButton from "./WishlistButton";
+import { FiMinus, FiPlus, FiRefreshCw, FiShare2, FiShield, FiShoppingCart, FiTruck, FiZap } from "react-icons/fi";
+import ProductGallery from "./ProductGallery";
 import { StarDisplay } from "./ReviewSection";
+import WhatsAppButton from "./WhatsAppButton";
+import WishlistButton from "./WishlistButton";
 
 interface VariantSelectorProps {
   product: IProduct;
@@ -24,9 +21,7 @@ export default function VariantSelector({ product, deal }: VariantSelectorProps)
   const addItem = useCartStore((s) => s.addItem);
   const router = useRouter();
 
-  // Track selected attribute values
   const [selected, setSelected] = useState<Record<string, string>>(() => {
-    // Pre-select first variant's combination
     if (product.variants.length > 0) {
       const first = product.variants[0];
       return typeof first.combination === "object" ? { ...first.combination } : {};
@@ -36,315 +31,247 @@ export default function VariantSelector({ product, deal }: VariantSelectorProps)
 
   const [quantity, setQuantity] = useState(1);
 
-  // Find matching variant based on selections
   const matchedVariant = useMemo<IVariant | null>(() => {
     if (product.attributes.length === 0 && product.variants.length > 0) {
       return product.variants[0];
     }
-
     return product.variants.find((v) => {
-      const combo = v.combination instanceof Map
-        ? Object.fromEntries(v.combination)
-        : v.combination;
+      const combo = v.combination instanceof Map ? Object.fromEntries(v.combination) : v.combination;
       return Object.entries(selected).every(([key, value]) => combo[key] === value);
     }) || null;
   }, [selected, product.variants, product.attributes]);
 
-  // Get images: variant images first, then global images
   const galleryImages = useMemo<IImage[]>(() => {
     const variantImages = matchedVariant?.images || [];
     const globalImages = product.images || [];
     return [...variantImages, ...globalImages];
   }, [matchedVariant, product.images]);
 
-  // Handle attribute selection
   const handleSelect = useCallback((attrName: string, value: string) => {
     setSelected((prev) => ({ ...prev, [attrName]: value }));
     setQuantity(1);
   }, []);
 
-  // Check which attribute values are available
-  const getAvailableValues = useCallback(
-    (attrName: string, value: string) => {
-      const testSelection = { ...selected, [attrName]: value };
-      return product.variants.some((v) => {
-        const combo = v.combination instanceof Map
-          ? Object.fromEntries(v.combination)
-          : v.combination;
-        return Object.entries(testSelection).every(
-          ([key, val]) => !val || combo[key] === val
-        ) && v.isActive && v.stock > 0;
-      });
-    },
-    [selected, product.variants]
-  );
+  const getAvailableValues = useCallback((attrName: string, value: string) => {
+    const testSelection = { ...selected, [attrName]: value };
+    return product.variants.some((v) => {
+      const combo = v.combination instanceof Map ? Object.fromEntries(v.combination) : v.combination;
+      return Object.entries(testSelection).every(([key, val]) => !val || combo[key] === val) && v.isActive && v.stock > 0;
+    });
+  }, [selected, product.variants]);
 
-  const getCartItem = () => {
-    if (!matchedVariant) return null;
-    const combo = matchedVariant.combination instanceof Map
-      ? Object.fromEntries(matchedVariant.combination)
-      : matchedVariant.combination;
-
-    return {
+  const handleAddToCart = () => {
+    if (!matchedVariant) { toast.error("Please select all options"); return; }
+    if (matchedVariant.stock === 0) { toast.error("This variant is out of stock"); return; }
+    const cartItem = {
       productId: product._id,
       productName: product.name,
       productSlug: product.slug,
       productImage: galleryImages[0]?.url || "",
-      variant: {
-        sku: matchedVariant.sku,
-        combination: combo,
-        price: deal ? deal.dealPrice : matchedVariant.price,
-      },
-      quantity,
-      maxStock: matchedVariant.stock,
-    };
-  };
-
-  const handleAddToCart = () => {
-    if (!matchedVariant) {
-      toast.error("Please select all options");
-      return;
-    }
-    if (matchedVariant.stock === 0) {
-      toast.error("This variant is out of stock");
-      return;
-    }
-
-    const cartItem = getCartItem();
-    if (cartItem) {
+        variant: {
+          sku: matchedVariant.sku,
+          combination: matchedVariant.combination instanceof Map ? Object.fromEntries(matchedVariant.combination) : matchedVariant.combination,
+          price: currentPrice,
+        },
+        quantity,
+        maxStock: matchedVariant.stock,
+      };
       addItem(cartItem);
       toast.success("Added to cart!");
-    }
-  };
+    };
 
-  // Quick Buy Now - adds single item and goes straight to checkout
-  const handleBuyNow = () => {
-    if (!matchedVariant) {
-      toast.error("Please select all options");
-      return;
-    }
-    if (matchedVariant.stock === 0) {
-      toast.error("This variant is out of stock");
-      return;
-    }
-
-    const cartItem = getCartItem();
-    if (cartItem) {
-      useCartStore.getState().clearCart();
-      addItem(cartItem, true); // true to prevent opening the dropdown menu
-      useCartStore.getState().closeCart(); // force close just in case
+    const handleBuyNow = () => {
+      if (!matchedVariant || matchedVariant.stock === 0) return;
+      handleAddToCart();
       router.push("/checkout");
-    }
-  };
+    };
 
-  const currentPrice = deal ? deal.dealPrice : (matchedVariant?.price || product.basePrice);
-  const originalPrice = deal ? deal.originalPrice : matchedVariant?.discountPrice;
-  const discount = originalPrice ? getDiscountPercentage(currentPrice, originalPrice) : 0;
-  const productUrl = typeof window !== "undefined" ? window.location.href : "";
+    const currentPrice = deal ? deal.dealPrice : (matchedVariant?.discountPrice || matchedVariant?.price || product.basePrice);
+    const originalPrice = deal ? deal.originalPrice : (matchedVariant?.discountPrice ? (matchedVariant.price || product.basePrice) : null);
+    const discountPercentage = (originalPrice && currentPrice < originalPrice) ? getDiscountPercentage(originalPrice, currentPrice) : 0;
+    const productUrl = typeof window !== "undefined" ? window.location.href : "";
 
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-      {/* Gallery */}
-      <ProductGallery images={galleryImages} productName={product.name} />
+    // Helper to detect color string
+    const isColor = (str: string) => str.startsWith("#") || str.startsWith("rgb") || str.includes("|#");
+    const getColorValue = (str: string) => str.includes("|") ? str.split("|")[1] : str;
+    const getColorName = (str: string) => str.includes("|") ? str.split("|")[0] : str;
 
-      {/* Product Info */}
-      <div className="space-y-6">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-slate-500">
-          <span>Home</span>
-          <span>/</span>
-          {typeof product.category === "object" && product.category && (
-            <>
-              <span className="text-blue-400/70">{(product.category as { name: string }).name}</span>
-              <span>/</span>
-            </>
-          )}
-          <span className="text-slate-600">{product.name}</span>
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
+        {/* Left: Gallery */}
+        <div className="lg:col-span-7">
+          <ProductGallery images={galleryImages} productName={product.name} />
         </div>
 
-        {/* Deal Countdown */}
-        {deal && (
-          <CountdownTimer endTime={deal.endTime} />
-        )}
+        {/* Right: Info Area */}
+        <div className="lg:col-span-5 space-y-8">
+          {/* Brand Header */}
+          <div className="relative group">
+             <div className="absolute top-0 left-0 w-8 h-1 bg-[#ef4a23]" />
+             <div className="pt-4 flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-black tracking-[0.2em] text-[#ef4a23] uppercase italic">
+                     Professional Grade // {product.brand || "velocity"}
+                  </span>
+                  <h1 className="text-3xl lg:text-4xl font-black text-[#081621] uppercase italic tracking-tighter leading-[0.9] mt-2">
+                    {product.name}
+                  </h1>
+                </div>
+                <div className="flex gap-2">
+                   <button className="w-10 h-10 border border-[#eee] flex items-center justify-center hover:bg-slate-50 transition-colors cursor-pointer">
+                      <FiShare2 size={16} className="text-[#666]" />
+                   </button>
+                </div>
+             </div>
 
-        {/* Name & Brand */}
-        <div>
-          {product.brand && (
-            <p className="text-sm text-blue-400 font-medium mb-1">{product.brand}</p>
-          )}
-          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 leading-tight">
-            {product.name}
-          </h1>
-          {/* Star Rating Summary */}
-          {product.reviewCount > 0 && (
-            <div className="flex items-center gap-2 mt-1.5">
-              <StarDisplay rating={product.avgRating} size={15} />
-              <span className="text-sm text-slate-500">
-                {product.avgRating} ({product.reviewCount} review{product.reviewCount > 1 ? "s" : ""})
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Price */}
-        <div className="flex items-baseline gap-3">
-          <span className="text-3xl font-bold text-slate-900">
-            {formatPrice(currentPrice)}
-          </span>
-          {originalPrice && originalPrice > currentPrice ? (
-            <span className="text-lg text-slate-600 line-through">
-              {formatPrice(originalPrice)}
-            </span>
-          ) : null}
-          {discount > 0 && (
-            <Badge variant="danger">Save {discount}%</Badge>
-          )}
-          {deal && (
-            <Badge variant="warning">🔥 Deal</Badge>
-          )}
-        </div>
-
-        {/* SKU & Stock */}
-        {matchedVariant && (
-          <div className="flex items-center gap-4 text-sm">
-            <span className="text-slate-500">SKU: <span className="text-slate-600">{matchedVariant.sku}</span></span>
-            <span className="text-slate-800">|</span>
-            {matchedVariant.stock > 0 ? (
-              <span className="text-emerald-400">
-                ● In Stock ({matchedVariant.stock} available)
-              </span>
-            ) : (
-              <span className="text-red-400">● Out of Stock</span>
-            )}
+             {product.reviewCount > 0 && (
+               <div className="flex items-center gap-2 mt-4">
+                 <StarDisplay rating={product.avgRating} size={13} />
+                 <span className="text-[11px] font-bold text-[#999] uppercase tracking-widest">
+                   {product.reviewCount} Reports
+                 </span>
+               </div>
+             )}
           </div>
-        )}
 
-        {/* Variant Selectors */}
-        {product.attributes.map((attr) => (
-          <div key={attr.name}>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              {attr.name}: <span className="text-slate-900">{selected[attr.name] || "Select"}</span>
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {attr.values.map((value) => {
-                const isSelected = selected[attr.name] === value;
-                const isAvailable = getAvailableValues(attr.name, value);
-
-                return (
-                  <button
-                    key={value}
-                    onClick={() => handleSelect(attr.name, value)}
-                    disabled={!isAvailable}
-                    className={cn(
-                      "px-4 py-2 rounded-xl text-sm font-medium border transition-all cursor-pointer",
-                      isSelected
-                        ? "border-blue-500 bg-blue-500/10 text-blue-400 ring-2 ring-blue-500/20"
-                        : isAvailable
-                          ? "border-slate-300 text-slate-700 hover:border-slate-600 hover:text-slate-900"
-                          : "border-slate-200 text-slate-700 cursor-not-allowed opacity-50 line-through"
-                    )}
-                  >
-                    {value}
-                  </button>
-                );
-              })}
+          {/* Price Block */}
+          <div className="bg-[#081621] p-6 text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-full bg-[#ef4a23]/10 skew-x-[-20deg] translate-x-16" />
+            <div className="relative z-10">
+              <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#ef4a23] mb-2">Current MSRP</p>
+              <div className="flex items-baseline gap-4">
+                <span className="text-4xl font-black italic tracking-tighter">{formatPrice(currentPrice)}</span>
+                {originalPrice && originalPrice > currentPrice && (
+                  <span className="text-lg text-white/50 line-through italic font-bold">{formatPrice(originalPrice)}</span>
+                )}
+              </div>
+              {discountPercentage > 0 && (
+                <div className="mt-3 inline-block bg-[#ef4a23] px-3 py-1 text-[10px] font-black uppercase italic tracking-widest">
+                  Save {discountPercentage}% OFF
+                </div>
+              )}
             </div>
           </div>
-        ))}
 
-        {/* Quantity */}
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Quantity</label>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center border border-slate-300 rounded-xl overflow-hidden">
+        {/* Variations */}
+        <div className="space-y-6">
+          {product.attributes.map((attr) => (
+            <div key={attr.name}>
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-[11px] font-black uppercase tracking-widest text-[#081621] italic">
+                  // {attr.name}: <span className="text-[#ef4a23]">{selected[attr.name] ? getColorName(selected[attr.name]) : "Pending"}</span>
+                </label>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {attr.values.map((val) => {
+                  const isSelected = selected[attr.name] === val;
+                  const isAvailable = getAvailableValues(attr.name, val);
+                  const colorCode = isColor(val) ? getColorValue(val) : null;
+
+                  return (
+                    <button
+                      key={val}
+                      onClick={() => handleSelect(attr.name, val)}
+                      disabled={!isAvailable}
+                      style={colorCode ? { backgroundColor: colorCode } : {}}
+                      className={cn(
+                        "relative transition-all cursor-pointer group",
+                        colorCode
+                          ? "w-10 h-10 border-2"
+                          : "px-5 py-2.5 border-2 text-[12px] font-black uppercase italic",
+                        isSelected
+                          ? "border-[#ef4a23] text-[#ef4a23] bg-[#ef4a23]/5"
+                          : "border-[#eee] text-[#666] hover:border-[#aaa] bg-white",
+                        !isAvailable && "opacity-20 cursor-not-allowed grayscale"
+                      )}
+                    >
+                      {!colorCode && val}
+                      {colorCode && isSelected && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                          <div className="w-1.5 h-1.5 bg-white rotate-45" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Actions Grid */}
+        <div className="space-y-4">
+           {/* Quantity & SKU */}
+           <div className="flex items-center gap-4">
+              <div className="flex border-2 border-[#081621]">
+                 <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-10 h-10 flex items-center justify-center hover:bg-[#eee] transition-colors cursor-pointer border-r-2 border-[#081621]"><FiMinus size={14} /></button>
+                 <div className="w-14 h-10 flex items-center justify-center text-[14px] font-black italic">{quantity}</div>
+                 <button onClick={() => setQuantity(Math.min(matchedVariant?.stock || 99, quantity + 1))} className="w-10 h-10 flex items-center justify-center hover:bg-[#eee] transition-colors cursor-pointer border-l-2 border-[#081621]"><FiPlus size={14} /></button>
+              </div>
+              {matchedVariant && (
+                <div className="px-4 py-2 border-2 border-[#eee] bg-[#fafafa] flex-1">
+                   <p className="text-[9px] font-black text-[#999] uppercase tracking-widest leading-none">Serial // S-Number</p>
+                   <p className="text-[12px] font-bold text-[#111] uppercase mt-1">{matchedVariant.sku}</p>
+                </div>
+              )}
+           </div>
+
+           {/* Main CTA */}
+           <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="px-3 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+                onClick={handleAddToCart}
+                disabled={!matchedVariant || matchedVariant.stock === 0}
+                className="col-span-1 py-5 border-2 border-[#081621] text-[#081621] font-black uppercase italic tracking-widest text-[13px] hover:bg-[#081621] hover:text-white transition-all flex items-center justify-center gap-3 cursor-pointer group disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                <FiMinus size={16} />
+                <FiShoppingCart size={18} className="group-hover:scale-110 transition-transform" />
+                {matchedVariant?.stock === 0 ? "Empty" : "Add Gear"}
               </button>
-              <span className="px-4 py-2 text-slate-900 font-medium min-w-[48px] text-center bg-slate-100">
-                {quantity}
-              </span>
               <button
-                onClick={() => setQuantity(Math.min(matchedVariant?.stock || 1, quantity + 1))}
-                className="px-3 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+                onClick={handleBuyNow}
+                disabled={!matchedVariant || matchedVariant.stock === 0}
+                className="col-span-1 py-5 bg-[#ef4a23] text-white font-black uppercase italic tracking-widest text-[13px] hover:bg-[#d83d1c] transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-50 shadow-[0_10px_20px_rgba(239,74,35,0.2)]"
               >
-                <FiPlus size={16} />
+                <FiZap size={18} />
+                Deploy
               </button>
-            </div>
-          </div>
+           </div>
+
+           {/* Auxiliary Actions */}
+           <div className="grid grid-cols-2 gap-3">
+              <WishlistButton productId={product._id} variant="button" className="!rounded-none !h-[50px] !border-2 !border-[#eee] !bg-white !text-[#333] !font-black !uppercase !italic !text-[11px] !tracking-widest" />
+              <WhatsAppButton productName={product.name} productUrl={productUrl} variant="full" className="!rounded-none !h-[50px] !bg-[#25D366] !text-white !font-black !uppercase !italic !text-[11px] !tracking-widest" />
+           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 pt-2">
-          <Button
-            onClick={handleAddToCart}
-            disabled={!matchedVariant || matchedVariant.stock === 0}
-            size="lg"
-            className="flex-1"
-          >
-            <FiShoppingCart className="mr-2" size={18} />
-            {matchedVariant?.stock === 0 ? "Out of Stock" : "Add to Cart"}
-          </Button>
-          <button
-            onClick={handleBuyNow}
-            disabled={!matchedVariant || matchedVariant.stock === 0}
-            className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-slate-900 font-semibold rounded-xl hover:from-orange-600 hover:to-red-600 transition-all shadow-lg shadow-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-          >
-            <FiZap size={18} />
-            Buy Now
-          </button>
-        </div>
-
-        {/* Wishlist Button */}
-        <WishlistButton productId={product._id} variant="button" className="w-full" />
-
-        {/* WhatsApp */}
-        <div className="flex items-center gap-3">
-          <WhatsAppButton
-            productName={product.name}
-            productUrl={productUrl}
-            price={formatPrice(currentPrice)}
-            variant="full"
-            className="flex-1"
-          />
-          <WhatsAppButton
-            productName={product.name}
-            productUrl={productUrl}
-            variant="icon"
-          />
-        </div>
-
-        {/* Features */}
-        <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-200">
-          <div className="text-center p-3">
-            <FiTruck className="mx-auto text-blue-400 mb-1" size={20} />
-            <p className="text-[11px] text-slate-500">Free Delivery</p>
-            <p className="text-[10px] text-slate-600">Over ৳5,000</p>
-          </div>
-          <div className="text-center p-3">
-            <FiShield className="mx-auto text-emerald-400 mb-1" size={20} />
-            <p className="text-[11px] text-slate-500">Warranty</p>
-            <p className="text-[10px] text-slate-600">Guaranteed</p>
-          </div>
-          <div className="text-center p-3">
-            <FiRefreshCw className="mx-auto text-amber-400 mb-1" size={20} />
-            <p className="text-[11px] text-slate-500">Easy Returns</p>
-            <p className="text-[10px] text-slate-600">7 Days</p>
-          </div>
-        </div>
-
-        {/* Description */}
+        {/* Short Description */}
         {product.description && (
-          <div className="pt-4 border-t border-slate-200">
-            <h3 className="text-sm font-semibold text-slate-900 mb-2">Description</h3>
-            <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
-              {product.description}
+          <div className="relative pt-8 border-t-4 border-[#081621]">
+            <div className="absolute top-[-14px] left-0 bg-[#081621] text-white px-3 py-0.5 text-[10px] font-black uppercase italic tracking-widest">
+               briefings
+            </div>
+            <p className="text-[13px] text-[#444] leading-relaxed font-medium">
+               {product.description.length > 300 ? product.description.slice(0, 300) + '...' : product.description}
             </p>
           </div>
         )}
+
+        {/* Confidence Badges */}
+        <div className="grid grid-cols-3 gap-1 bg-[#f8f9fa] border border-[#eee]">
+           <div className="p-3 text-center border-r border-[#eee]">
+              <FiTruck className="mx-auto text-[#ef4a23] mb-1" />
+              <p className="text-[9px] font-black uppercase text-[#081621]">Rapid Delivery</p>
+           </div>
+           <div className="p-3 text-center border-r border-[#eee]">
+              <FiShield className="mx-auto text-[#ef4a23] mb-1" />
+              <p className="text-[9px] font-black uppercase text-[#081621]">Warranty Sec.</p>
+           </div>
+           <div className="p-3 text-center">
+              <FiRefreshCw className="mx-auto text-[#ef4a23] mb-1" />
+              <p className="text-[9px] font-black uppercase text-[#081621]">Easy Swap</p>
+           </div>
+        </div>
       </div>
     </div>
   );
 }
+

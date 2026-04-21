@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FiUser, FiMail, FiPhone, FiLock, FiChevronRight, FiArrowLeft } from "react-icons/fi";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import toast from "react-hot-toast";
+import { FiArrowLeft, FiChevronRight, FiLock, FiMail, FiPhone, FiUser } from "react-icons/fi";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -24,23 +24,24 @@ export default function RegisterPage() {
 
       const json = await res.json();
       if (json.success) {
-        toast.success("Welcome to Velocity! Please sign in.");
+        toast.success("Deployment ID Created. Please initialize access.");
         router.push("/login");
       } else {
-        toast.error(json.error || "Registration failed");
+        toast.error(json.error || "Registration cycle failed");
       }
     } catch {
-      toast.error("Something went wrong");
+      toast.error("Internal connection error during enlistment");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#F2F4F8] flex items-center justify-center relative overflow-hidden font-sans">
-      {/* Background with texture/overlay */}
-      <div 
-        className="absolute inset-0 opacity-60 pointer-events-none"
+    <div className="min-h-screen bg-white flex items-center justify-center relative overflow-hidden select-none">
+      
+      {/* Pristine Minimalist Backdrop */}
+      <div
+        className="absolute inset-0 opacity-[0.05] grayscale pointer-events-none"
         style={{
             backgroundImage: `url('/sports_light_auth_bg_1776753484363.png')`,
             backgroundSize: 'cover',
@@ -48,104 +49,105 @@ export default function RegisterPage() {
         }}
       />
       
-      {/* Grid Pattern overlay */}
-      <div className="absolute inset-0 opacity-[0.4] pointer-events-none appearance-none" style={{ backgroundImage: 'radial-gradient(#d1d5db 1px, transparent 0)', backgroundSize: '40px 40px' }} />
+      {/* Technical Grid overlay */}
+      <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#081621 1px, transparent 0)', backgroundSize: '40px 40px' }} />
 
-      <div className="relative z-10 w-full max-w-md p-6">
-        <div className="mb-10 text-center">
-          <Link href="/" className="inline-block mb-8">
-            <span className="text-4xl font-black text-[#081621] italic tracking-tighter hover:text-[#ef4a23] transition-colors uppercase">
+      <div className="relative z-10 w-full max-w-sm p-6 animate-in fade-in zoom-in-95 duration-700">
+        <div className="mb-12 text-center">
+          <Link href="/" className="inline-block mb-10 group">
+            <span className="text-4xl md:text-5xl font-[1000] text-[#081621] italic tracking-tighter group-hover:text-[#ef4a23] transition-all uppercase">
               VELOCITY
             </span>
           </Link>
-          <h1 className="text-2xl font-bold text-[#081621] uppercase tracking-wider mb-2">Join the Squad</h1>
-          <div className="h-1 w-12 bg-[#ef4a23] mx-auto" />
+          <div className="flex items-center justify-center gap-3 mb-3">
+             <span className="w-1.5 h-1.5 bg-[#ef4a23]" />
+             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-[#081621]/40 italic">Personnel // Recruitment</p>
+          </div>
+          <h1 className="text-2xl font-[1000] text-[#081621] uppercase italic tracking-tight">Create Identity</h1>
         </div>
 
-        <div className="bg-white border border-[#eee] shadow-[0_15px_40px_rgba(0,0,0,0.05)] p-8">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="relative group">
-              <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#ef4a23] transition-colors" />
-              <input
-                type="text"
-                placeholder="Full Name"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full h-11 bg-[#f8f9fa] border border-[#eee] pl-12 pr-4 text-[#111] text-sm focus:outline-none focus:border-[#ef4a23] focus:bg-white transition-all placeholder:text-slate-400 font-medium"
-                required
-              />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 w-12 flex items-center justify-center border-r border-[#eee]">
+               <FiUser className="text-[#081621] opacity-30 group-focus-within:opacity-100 transition-opacity" />
             </div>
+            <input
+              type="text"
+              placeholder="FULL PERSONNEL NAME"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className="w-full h-12 bg-white border border-[#eee] focus:border-[#081621] pl-16 pr-6 text-[#081621] text-xs font-bold uppercase outline-none transition-all placeholder:text-[#ccc]"
+              required
+            />
+          </div>
 
-            <div className="relative group">
-              <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#ef4a23] transition-colors" />
-              <input
-                type="email"
-                placeholder="Email Address"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="w-full h-11 bg-[#f8f9fa] border border-[#eee] pl-12 pr-4 text-[#111] text-sm focus:outline-none focus:border-[#ef4a23] focus:bg-white transition-all placeholder:text-slate-400 font-medium"
-                required
-              />
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 w-12 flex items-center justify-center border-r border-[#eee]">
+               <FiMail className="text-[#081621] opacity-30 group-focus-within:opacity-100 transition-opacity" />
             </div>
+            <input
+              type="email"
+              placeholder="IDENT//EMAIL ADDRESS"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              className="w-full h-12 bg-white border border-[#eee] focus:border-[#081621] pl-16 pr-6 text-[#081621] text-xs font-bold uppercase outline-none transition-all placeholder:text-[#ccc]"
+              required
+            />
+          </div>
 
-            <div className="relative group">
-              <FiPhone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#ef4a23] transition-colors" />
-              <input
-                type="tel"
-                placeholder="Phone (Optional)"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="w-full h-11 bg-[#f8f9fa] border border-[#eee] pl-12 pr-4 text-[#111] text-sm focus:outline-none focus:border-[#ef4a23] focus:bg-white transition-all placeholder:text-slate-400 font-medium"
-              />
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 w-12 flex items-center justify-center border-r border-[#eee]">
+               <FiPhone className="text-[#081621] opacity-30 group-focus-within:opacity-100 transition-opacity" />
             </div>
+            <input
+              type="tel"
+              placeholder="COORD//PHONE (OPTIONAL)"
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              className="w-full h-12 bg-white border border-[#eee] focus:border-[#081621] pl-16 pr-6 text-[#081621] text-xs font-bold uppercase outline-none transition-all placeholder:text-[#ccc]"
+            />
+          </div>
 
-            <div className="relative group">
-              <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#ef4a23] transition-colors" />
-              <input
-                type="password"
-                placeholder="Create Password"
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                className="w-full h-11 bg-[#f8f9fa] border border-[#eee] pl-12 pr-4 text-[#111] text-sm focus:outline-none focus:border-[#ef4a23] focus:bg-white transition-all placeholder:text-slate-400 font-medium"
-                required
-              />
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 w-12 flex items-center justify-center border-r border-[#eee]">
+               <FiLock className="text-[#081621] opacity-30 group-focus-within:opacity-100 transition-opacity" />
             </div>
+            <input
+              type="password"
+              placeholder="SECURE//CREATE PASSWORD"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              className="w-full h-12 bg-white border border-[#eee] focus:border-[#081621] pl-16 pr-6 text-[#081621] text-xs font-bold outline-none transition-all placeholder:text-[#ccc]"
+              required
+            />
+          </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-12 mt-4 bg-[#ef4a23] text-white font-black uppercase tracking-[0.2em] hover:bg-[#081621] transition-all group flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <>
-                  Create Recruit
-                  <FiChevronRight className="group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
-            </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full h-14 mt-6 bg-[#081621] hover:bg-[#ef4a23] text-white font-black uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-3 italic text-[12px] group cursor-pointer"
+          >
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+            ) : (
+              <>
+                Confirm Recruitment
+                <FiChevronRight className="group-hover:translate-x-1 transition-transform" />
+              </>
+            )}
+          </button>
 
-            <div className="pt-6 border-t border-[#eee] flex flex-col items-center gap-4">
-              <Link href="/login" className="text-xs uppercase font-bold text-slate-400 hover:text-[#ef4a23] transition-colors tracking-widest flex items-center gap-2">
-                <FiArrowLeft size={14} /> Already a pro? <span className="text-[#ef4a23] underline underline-offset-4">Login</span>
-              </Link>
-            </div>
-          </form>
-        </div>
-
-        <div className="mt-8 text-center">
-            <Link href="/" className="text-[10px] uppercase font-bold text-slate-400 hover:text-[#081621] transition-colors tracking-widest">
-                Back to Site
+          <div className="pt-10 border-t border-[#eee] flex flex-col items-center gap-6 text-center">
+            <Link href="/login" className="text-[11px] uppercase font-black text-[#081621]/40 hover:text-[#ef4a23] transition-all tracking-[0.2em] italic flex items-center gap-2">
+              <FiArrowLeft size={14} /> Already Active User? <span className="text-[#081621] border-b border-[#081621]/20">Login</span>
             </Link>
-        </div>
+          </div>
+        </form>
       </div>
 
-      {/* Decorative slant */}
-      <div className="absolute bottom-0 left-0 w-1/4 h-[3px] bg-[#ef4a23] -skew-x-[45deg] translate-y-2" />
-      <div className="absolute top-0 right-0 w-1/4 h-[3px] bg-[#ef4a23] -skew-x-[45deg] -translate-y-2" />
+      {/* Industrial Accents */}
+      <div className="absolute bottom-0 left-0 w-1/4 h-1 bg-[#ef4a23]" />
+      <div className="absolute top-0 right-0 w-1/4 h-1 bg-[#081621]" />
     </div>
   );
 }
-
-

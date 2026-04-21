@@ -290,7 +290,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
             <div className={`space-y-6 ${hasVariants ? "opacity-50 pointer-events-none" : ""}`}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Input
-                  label="Selling Price (৳) *"
+                  label="Original Price (৳) *"
                   type="number"
                   value={simpleInventory.price}
                   onChange={(e) => setSimpleInventory({ ...simpleInventory, price: e.target.value })}
@@ -298,7 +298,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                   id="simple-price"
                 />
                 <Input
-                  label="Compare-at Price (৳)"
+                  label="Discount Price (৳)"
                   type="number"
                   value={simpleInventory.discountPrice}
                   onChange={(e) => setSimpleInventory({ ...simpleInventory, discountPrice: e.target.value })}

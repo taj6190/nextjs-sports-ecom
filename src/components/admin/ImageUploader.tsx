@@ -122,6 +122,7 @@ export default function ImageUploader({
                 </div>
               )}
               <button
+                type="button"
                 onClick={(e) => { e.stopPropagation(); removeImage(i); }}
                 className="absolute top-1 right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
               >

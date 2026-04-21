@@ -26,7 +26,7 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
   return (
     <div className="space-y-4">
       {/* Main Image */}
-      <div className="relative aspect-square bg-slate-100 rounded-2xl overflow-hidden border border-slate-200 group">
+      <div className="relative aspect-square bg-white border border-[#eee] group overflow-hidden shadow-sm">
         {allImages[activeIndex]?.url ? (
           <>
             <Image
@@ -34,7 +34,7 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
               alt={allImages[activeIndex].alt || productName}
               fill
               className={cn(
-                "object-contain transition-transform duration-500",
+                "object-contain transition-transform duration-700",
                 zoomed && "scale-150 cursor-zoom-out"
               )}
               priority
@@ -44,15 +44,15 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
             {!zoomed && (
               <button
                 onClick={() => setZoomed(true)}
-                className="absolute bottom-4 right-4 p-2 bg-black/50 backdrop-blur-sm rounded-lg text-slate-900 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                className="absolute bottom-6 right-6 w-10 h-10 bg-[#081621] text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-[#ef4a23] cursor-pointer"
               >
-                <FiZoomIn size={18} />
+                <FiZoomIn size={20} />
               </button>
             )}
           </>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-slate-700">
-            <span className="text-4xl">📷</span>
+          <div className="w-full h-full flex items-center justify-center text-slate-400">
+            <span className="text-sm font-bold uppercase tracking-widest italic opacity-20 italic">No Media Available</span>
           </div>
         )}
 
@@ -61,32 +61,35 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
           <>
             <button
               onClick={() => goTo(activeIndex - 1)}
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 backdrop-blur-sm rounded-xl text-slate-900 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70 cursor-pointer"
+              className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-16 bg-[#081621]/90 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-[#ef4a23] cursor-pointer"
             >
-              <FiChevronLeft size={20} />
+              <FiChevronLeft size={24} />
             </button>
             <button
               onClick={() => goTo(activeIndex + 1)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 backdrop-blur-sm rounded-xl text-slate-900 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70 cursor-pointer"
+              className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-16 bg-[#081621]/90 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-[#ef4a23] cursor-pointer"
             >
-              <FiChevronRight size={20} />
+              <FiChevronRight size={24} />
             </button>
           </>
         )}
+
+        {/* Status Line */}
+        <div className="absolute top-0 left-0 w-1 h-full bg-[#ef4a23] opacity-20" />
       </div>
 
       {/* Thumbnails */}
       {allImages.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
           {allImages.map((img, i) => (
             <button
               key={i}
               onClick={() => setActiveIndex(i)}
               className={cn(
-                "relative w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden border-2 transition-all cursor-pointer",
+                "relative w-20 h-20 flex-shrink-0 border-2 transition-all cursor-pointer",
                 i === activeIndex
-                  ? "border-blue-500 ring-2 ring-blue-500/20"
-                  : "border-slate-300 hover:border-slate-600"
+                  ? "border-[#ef4a23] shadow-md"
+                  : "border-[#eee] hover:border-[#aaa] opacity-70 hover:opacity-100"
               )}
             >
               {img.url ? (
@@ -94,11 +97,11 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
                   src={img.url}
                   alt={img.alt || `${productName} - ${i + 1}`}
                   fill
-                  className="object-cover"
-                  sizes="64px"
+                  className="object-cover p-1"
+                  sizes="80px"
                 />
               ) : (
-                <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-600 text-xs">
+                <div className="w-full h-full bg-slate-50 flex items-center justify-center text-slate-400 text-[10px] font-bold">
                   N/A
                 </div>
               )}
@@ -109,3 +112,4 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
     </div>
   );
 }
+

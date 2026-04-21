@@ -105,6 +105,7 @@ export default function VariantEngine({
           </p>
         </div>
         <button
+          type="button"
           onClick={handleGenerate}
           disabled={attributes.length === 0}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 text-white text-sm font-medium rounded-xl transition-all cursor-pointer disabled:cursor-not-allowed"
@@ -138,6 +139,7 @@ export default function VariantEngine({
             />
           </div>
           <button
+            type="button"
             onClick={applyBulk}
             className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded-lg transition-colors cursor-pointer"
           >
@@ -154,8 +156,8 @@ export default function VariantEngine({
               <tr className="border-b border-slate-800">
                 <th className="text-left py-3 px-3 text-slate-400 font-medium">Variant</th>
                 <th className="text-left py-3 px-3 text-slate-400 font-medium">SKU</th>
-                <th className="text-left py-3 px-3 text-slate-400 font-medium">Price (৳)</th>
-                <th className="text-left py-3 px-3 text-slate-400 font-medium">Compare At</th>
+                <th className="text-left py-3 px-3 text-slate-400 font-medium whitespace-nowrap">Orig. Price (৳)</th>
+                <th className="text-left py-3 px-3 text-slate-400 font-medium whitespace-nowrap">Disc. Price (৳)</th>
                 <th className="text-left py-3 px-3 text-slate-400 font-medium">Stock</th>
                 <th className="text-left py-3 px-3 text-slate-400 font-medium">Active</th>
                 <th className="text-left py-3 px-3 text-slate-400 font-medium">Images</th>
@@ -225,6 +227,7 @@ export default function VariantEngine({
                   </td>
                   <td className="py-3 px-3">
                     <button
+                      type="button"
                       onClick={() => setExpandedVariant(expandedVariant === index ? null : index)}
                       className="px-3 py-1 bg-slate-700/50 hover:bg-slate-700 text-slate-300 text-xs rounded-lg transition-colors cursor-pointer"
                     >
@@ -233,6 +236,7 @@ export default function VariantEngine({
                   </td>
                   <td className="py-3 px-3">
                     <button
+                      type="button"
                       onClick={() => removeVariant(index)}
                       className="p-1.5 text-slate-500 hover:text-red-400 rounded-lg hover:bg-slate-800 transition-all cursor-pointer"
                     >
