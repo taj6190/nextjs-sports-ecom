@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { FiUserPlus, FiEdit, FiTrash2, FiSearch, FiUsers } from "react-icons/fi";
+import { FiUserPlus, FiEdit2, FiTrash2, FiSearch } from "react-icons/fi";
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -18,14 +18,14 @@ export default function AdminUsersPage() {
   }, []);
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this user?")) return;
+    if (!confirm("Purge personnel record?")) return;
     const res = await fetch(`/api/admin/users/${id}`, { method: "DELETE" });
     const data = await res.json();
     if (data.success) {
-      toast.success("User deleted");
+      toast.success("RECORD EXPUNGED");
       setUsers(u => u.filter(x => x._id !== id));
     } else {
-      toast.error(data.message);
+      toast.error(data.message?.toUpperCase() || "PURGE FAILED");
     }
   };
 
@@ -35,89 +35,95 @@ export default function AdminUsersPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 select-none">
+      
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <FiUsers className="text-blue-400" /> User Management
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">Manage all registered users and their roles</p>
+           <div className="flex items-center gap-2 mb-2">
+            <div className="w-1.5 h-4 bg-[#ef4a23]" />
+            <h2 className="text-[10px] font-black tracking-[0.4em] text-[#ef4a23] uppercase italic">Personnel Roster</h2>
+           </div>
+           <h1 className="text-3xl lg:text-4xl font-[1000] text-white tracking-tighter uppercase italic">
+            Active <span className="text-white/20">Operatives</span>
+           </h1>
         </div>
         <Link
           href="/admin/users/create"
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-all"
+          className="inline-flex items-center gap-3 px-6 py-3 bg-[#ef4a23] text-white text-[11px] font-black tracking-[0.2em] uppercase italic hover:bg-white hover:text-black transition-colors"
         >
-          <FiUserPlus size={16} /> Add User
+          <FiUserPlus size={16} /> Enlist Personnel
         </Link>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
-        <input
-          type="text"
-          placeholder="Search users..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-full pl-9 pr-4 py-2.5 bg-slate-900/50 border border-slate-800 text-white text-sm rounded-xl outline-none focus:border-slate-600 transition-all placeholder:text-slate-600"
-        />
+      {/* Control Panel */}
+      <div className="bg-[#111119] border border-white/[0.06] p-4 flex flex-col md:flex-row gap-4">
+        <div className="relative max-w-md w-full">
+          <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={16} />
+          <input
+            type="text"
+            placeholder="SCAN IDENTITIES..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full pl-12 pr-4 py-3 bg-white/[0.02] border border-white/[0.06] text-[11px] font-bold tracking-[0.2em] text-white placeholder-white/30 uppercase italic focus:outline-none focus:border-[#ef4a23] transition-colors"
+          />
+        </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-slate-900/50 border border-slate-800/50 rounded-2xl overflow-hidden">
-        <table className="w-full">
+      {/* Data Roster */}
+      <div className="bg-[#111119] border border-white/[0.06]">
+        <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-slate-800">
-              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">User</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Email</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Role</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Joined</th>
-              <th className="px-6 py-4 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Actions</th>
+            <tr className="border-b border-white/[0.06] bg-white/[0.02]">
+              <th className="py-4 px-5 text-[10px] font-black tracking-[0.2em] text-white/40 uppercase italic">Operative</th>
+              <th className="py-4 px-5 text-[10px] font-black tracking-[0.2em] text-white/40 uppercase italic">Comm Link</th>
+              <th className="py-4 px-5 text-[10px] font-black tracking-[0.2em] text-white/40 uppercase italic">Clearance</th>
+              <th className="py-4 px-5 text-[10px] font-black tracking-[0.2em] text-white/40 uppercase italic">Enlisted</th>
+              <th className="py-4 px-5 text-[10px] font-black tracking-[0.2em] text-white/40 uppercase italic text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/50">
+          <tbody>
             {loading ? (
-              <tr><td colSpan={5} className="px-6 py-16 text-center text-sm text-slate-500">Loading users...</td></tr>
+              <tr><td colSpan={5} className="py-16 text-center text-[10px] font-black tracking-[0.4em] text-white/20 uppercase italic animate-pulse">Scanning Roster...</td></tr>
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={5} className="px-6 py-16 text-center text-sm text-slate-500">No users found</td></tr>
+              <tr><td colSpan={5} className="py-16 text-center text-[10px] font-black tracking-[0.4em] text-white/20 uppercase italic">No Matches Detected</td></tr>
             ) : (
               filtered.map(user => (
-                <tr key={user._id} className="hover:bg-slate-800/20 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-white text-xs font-bold uppercase">
+                <tr key={user._id} className="border-b border-white/[0.06] hover:bg-white/[0.02] transition-colors">
+                  <td className="py-4 px-5">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-white/[0.04] border border-white/10 flex items-center justify-center text-[#ef4a23] text-lg font-black italic">
                         {user.name.charAt(0)}
                       </div>
-                      <span className="text-sm font-medium text-white">{user.name}</span>
+                      <span className="font-black text-white text-[12px] uppercase italic tracking-wider">{user.name}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-400">{user.email}</td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-lg ${
+                  <td className="py-4 px-5 text-[11px] font-bold tracking-[0.1em] text-white/40 uppercase truncate max-w-[200px]">{user.email}</td>
+                  <td className="py-4 px-5">
+                    <span className={`px-2 py-1 text-[9px] font-black tracking-widest uppercase italic border ${
                       user.role === "admin"
-                        ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
-                        : "bg-slate-700/50 text-slate-400 border border-slate-600/30"
+                        ? "text-[#ef4a23] border-[#ef4a23]/30 bg-[#ef4a23]/10"
+                        : "text-white/60 border-white/20 bg-white/5"
                     }`}>
                       {user.role}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-500">
+                  <td className="py-4 px-5 text-[10px] font-bold tracking-widest text-white/30 uppercase italic">
                     {new Date(user.createdAt).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="py-4 px-5 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <Link
                         href={`/admin/users/${user._id}/edit`}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all"
+                        className="w-8 h-8 flex items-center justify-center border border-white/20 text-white/40 hover:text-white hover:border-[#ef4a23] hover:bg-[#ef4a23] transition-colors"
                       >
-                        <FiEdit size={14} />
+                        <FiEdit2 size={12} />
                       </Link>
                       <button
                         onClick={() => handleDelete(user._id)}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-700 text-slate-400 hover:text-red-400 hover:border-red-500/50 transition-all"
+                        className="w-8 h-8 flex items-center justify-center border border-white/20 text-white/40 hover:text-white hover:border-red-500 hover:bg-red-500 transition-colors"
                       >
-                        <FiTrash2 size={14} />
+                        <FiTrash2 size={12} />
                       </button>
                     </div>
                   </td>
@@ -127,8 +133,8 @@ export default function AdminUsersPage() {
           </tbody>
         </table>
         {!loading && (
-          <div className="px-6 py-3 border-t border-slate-800/50 text-xs text-slate-500">
-            {filtered.length} of {users.length} users
+          <div className="px-5 py-3 text-[9px] font-black tracking-widest text-white/20 uppercase italic border-t border-white/[0.06]">
+            {filtered.length} of {users.length} Operatives Listed
           </div>
         )}
       </div>

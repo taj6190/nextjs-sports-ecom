@@ -40,8 +40,8 @@ export default function AdminProductsPage() {
   };
 
   const handleBulkAction = async (action: string) => {
-    if (selectedIds.size === 0) { toast.error("No items selected"); return; }
-    if (action === "delete" && !confirm(`Move ${selectedIds.size} products to recycle bin?`)) return;
+    if (selectedIds.size === 0) { toast.error("No units selected"); return; }
+    if (action === "delete" && !confirm(`Purge ${selectedIds.size} tactical units?`)) return;
 
     setBulkLoading(true);
     try {
@@ -52,25 +52,25 @@ export default function AdminProductsPage() {
       });
       const json = await res.json();
       if (json.success) {
-        toast.success(json.message);
+        toast.success(json.message.toUpperCase());
         setSelectedIds(new Set());
         fetchProducts();
       } else {
-        toast.error(json.error || "Failed");
+        toast.error(json.error || "OPERATION FAILED");
       }
     } catch {
-      toast.error("Operation failed");
+      toast.error("COMMUNICATION ERROR");
     } finally {
       setBulkLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Move this product to recycle bin?")) return;
+    if (!confirm("Purge asset from active roster?")) return;
     const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
     const json = await res.json();
-    if (json.success) { toast.success("Moved to recycle bin"); fetchProducts(); }
-    else toast.error(json.error || "Failed");
+    if (json.success) { toast.success("ASSET PURGED"); fetchProducts(); }
+    else toast.error(json.error || "OPERATION FAILED");
   };
 
   const filteredProducts = products.filter((p) =>
@@ -79,137 +79,149 @@ export default function AdminProductsPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 select-none">
+      
+      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Products</h1>
-          <p className="text-sm text-slate-500 mt-1">{products.length} products</p>
+           <div className="flex items-center gap-2 mb-2">
+            <div className="w-1.5 h-4 bg-[#ef4a23]" />
+            <h2 className="text-[10px] font-black tracking-[0.4em] text-[#ef4a23] uppercase italic">Inventory Systems</h2>
+           </div>
+           <h1 className="text-3xl lg:text-4xl font-[1000] text-white tracking-tighter uppercase italic">
+            Active <span className="text-white/20">Assets</span>
+           </h1>
         </div>
+        
         <Link
           href="/admin/products/new"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25"
+          className="inline-flex items-center gap-3 px-6 py-3 bg-[#ef4a23] text-white text-[11px] font-black tracking-[0.2em] uppercase italic hover:bg-white hover:text-black transition-colors"
         >
-          <FiPlus size={16} /> Add Product
+          <FiPlus size={16} /> Deploy New Asset
         </Link>
       </div>
 
-      {/* Search & Bulk Actions */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      {/* Control Panel */}
+      <div className="bg-[#111119] border border-white/[0.06] p-4 flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+          <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={16} />
           <input
             type="text"
-            placeholder="Search products..."
+            placeholder="SCAN ASSETS..."
             value={searchFilter}
             onChange={(e) => setSearchFilter(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-800/50 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            className="w-full pl-12 pr-4 py-3 bg-white/[0.02] border border-white/[0.06] text-[11px] font-bold tracking-[0.2em] text-white placeholder-white/30 uppercase italic focus:outline-none focus:border-[#ef4a23] transition-colors"
           />
         </div>
+
         {selectedIds.size > 0 && (
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm text-blue-400 font-medium">{selectedIds.size} selected</span>
+          <div className="flex items-center gap-2 flex-wrap bg-white/[0.02] border border-white/[0.06] px-4 py-2">
+            <span className="text-[10px] font-black tracking-[0.2em] text-[#ef4a23] uppercase italic mr-2">{selectedIds.size} Selected</span>
             <button onClick={() => handleBulkAction("activate")} disabled={bulkLoading}
-              className="px-3 py-2 bg-emerald-500/10 text-emerald-400 text-xs font-medium rounded-lg hover:bg-emerald-500/20 transition-all cursor-pointer disabled:opacity-50">
-              <FiCheck className="inline mr-1" size={12} /> Activate
+              className="px-3 py-2 border border-emerald-500/30 text-emerald-500 text-[9px] font-black tracking-widest uppercase italic hover:bg-emerald-500/10 transition-colors disabled:opacity-50">
+              <FiCheck className="inline mr-1" size={10} /> Active
             </button>
             <button onClick={() => handleBulkAction("deactivate")} disabled={bulkLoading}
-              className="px-3 py-2 bg-slate-700/50 text-slate-300 text-xs font-medium rounded-lg hover:bg-slate-700 transition-all cursor-pointer disabled:opacity-50">
-              <FiX className="inline mr-1" size={12} /> Deactivate
+              className="px-3 py-2 border border-white/20 text-white/60 text-[9px] font-black tracking-widest uppercase italic hover:bg-white/5 transition-colors disabled:opacity-50">
+              <FiX className="inline mr-1" size={10} /> Standby
             </button>
             <button onClick={() => handleBulkAction("feature")} disabled={bulkLoading}
-              className="px-3 py-2 bg-amber-500/10 text-amber-400 text-xs font-medium rounded-lg hover:bg-amber-500/20 transition-all cursor-pointer disabled:opacity-50">
-              <FiStar className="inline mr-1" size={12} /> Feature
+              className="px-3 py-2 border border-amber-500/30 text-amber-500 text-[9px] font-black tracking-widest uppercase italic hover:bg-amber-500/10 transition-colors disabled:opacity-50">
+              <FiStar className="inline mr-1" size={10} /> Feature
             </button>
             <button onClick={() => handleBulkAction("delete")} disabled={bulkLoading}
-              className="px-3 py-2 bg-red-500/10 text-red-400 text-xs font-medium rounded-lg hover:bg-red-500/20 transition-all cursor-pointer disabled:opacity-50">
-              <FiTrash2 className="inline mr-1" size={12} /> Delete
+              className="px-3 py-2 border border-red-500/30 text-red-500 text-[9px] font-black tracking-widest uppercase italic hover:bg-red-500/10 transition-colors disabled:opacity-50">
+              <FiTrash2 className="inline mr-1" size={10} /> Purge
             </button>
             <button onClick={() => setSelectedIds(new Set())}
-              className="px-3 py-2 text-slate-500 text-xs rounded-lg hover:text-white cursor-pointer">
-              Clear
+              className="px-3 py-2 text-white/40 text-[9px] font-black tracking-widest uppercase italic hover:text-white transition-colors">
+              Abort
             </button>
           </div>
         )}
       </div>
 
-      <div className="bg-slate-900/50 border border-slate-800/50 rounded-2xl overflow-hidden">
+      {/* Asset Matrix */}
+      <div className="bg-[#111119] border border-white/[0.06]">
         {loading ? (
-          <div className="p-8 text-center text-slate-500">Loading...</div>
+          <div className="p-12 text-center text-[10px] font-black tracking-[0.4em] text-white/20 uppercase italic animate-pulse">Initializing Matrix...</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-800">
-                  <th className="py-4 px-3 w-10">
+                <tr className="border-b border-white/[0.06] bg-white/[0.02]">
+                  <th className="py-4 px-5 w-12">
                     <input
                       type="checkbox"
                       checked={selectedIds.size === filteredProducts.length && filteredProducts.length > 0}
                       onChange={toggleSelectAll}
-                      className="w-4 h-4 bg-slate-800 border-slate-600 rounded text-blue-600 cursor-pointer"
+                      className="w-4 h-4 appearance-none border border-white/20 bg-transparent checked:bg-[#ef4a23] checked:border-[#ef4a23] cursor-pointer"
                     />
                   </th>
-                  <th className="text-left py-4 px-3 text-slate-400 font-medium">Product</th>
-                  <th className="text-left py-4 px-3 text-slate-400 font-medium">Category</th>
-                  <th className="text-left py-4 px-3 text-slate-400 font-medium">Price</th>
-                  <th className="text-left py-4 px-3 text-slate-400 font-medium">Stock</th>
-                  <th className="text-left py-4 px-3 text-slate-400 font-medium">Sales</th>
-                  <th className="text-left py-4 px-3 text-slate-400 font-medium">Status</th>
-                  <th className="py-4 px-3" />
+                  <th className="py-4 px-5 text-[10px] font-black tracking-[0.2em] text-white/40 uppercase italic">Asset Ident</th>
+                  <th className="py-4 px-5 text-[10px] font-black tracking-[0.2em] text-white/40 uppercase italic">Classification</th>
+                  <th className="py-4 px-5 text-[10px] font-black tracking-[0.2em] text-white/40 uppercase italic">Quote</th>
+                  <th className="py-4 px-5 text-[10px] font-black tracking-[0.2em] text-white/40 uppercase italic">Status</th>
+                  <th className="py-4 px-5 text-[10px] font-black tracking-[0.2em] text-white/40 uppercase italic">Intel</th>
+                  <th className="py-4 px-5 text-[10px] font-black tracking-[0.2em] text-white/40 uppercase italic text-right">Commands</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredProducts.map((product) => (
-                  <tr key={product._id} className={`border-b border-slate-800/50 hover:bg-slate-800/20 ${selectedIds.has(product._id) ? "bg-blue-500/5" : ""}`}>
-                    <td className="py-3 px-3">
+                  <tr key={product._id} className={`border-b border-white/[0.06] hover:bg-white/[0.02] transition-colors ${selectedIds.has(product._id) ? "bg-[#ef4a23]/5" : ""}`}>
+                    <td className="py-4 px-5">
                       <input
                         type="checkbox"
                         checked={selectedIds.has(product._id)}
                         onChange={() => toggleSelect(product._id)}
-                        className="w-4 h-4 bg-slate-800 border-slate-600 rounded text-blue-600 cursor-pointer"
+                        className="w-4 h-4 appearance-none border border-white/20 bg-transparent checked:bg-[#ef4a23] checked:border-[#ef4a23] cursor-pointer"
                       />
                     </td>
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-800 flex-shrink-0">
+                    <td className="py-4 px-5">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-white/[0.04] border border-white/10 shrink-0">
                           {product.images?.[0]?.url ? (
-                            <Image src={product.images[0].url} alt={product.name} width={40} height={40} className="object-cover w-full h-full" />
+                            <Image src={product.images[0].url} alt={product.name} width={48} height={48} className="object-cover w-full h-full grayscale hover:grayscale-0 transition-all" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-slate-600 text-xs">N/A</div>
+                            <div className="w-full h-full flex items-center justify-center text-white/20 text-[9px] font-black uppercase tracking-widest italic">N/A</div>
                           )}
                         </div>
                         <div>
-                          <p className="font-medium text-white line-clamp-1">{product.name}</p>
-                          <p className="text-xs text-slate-500">{product.brand}</p>
+                          <p className="font-black text-white text-[12px] uppercase italic tracking-wider leading-tight">{product.name}</p>
+                          <p className="text-[10px] font-bold tracking-[0.2em] text-[#ef4a23] uppercase italic mt-1">{product.brand}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-3 text-slate-400">
-                      {typeof product.category === "object" && product.category ? (product.category as { name: string }).name : "—"}
+                    <td className="py-4 px-5">
+                      <span className="text-[11px] font-bold text-white/60 tracking-widest uppercase italic">
+                         {typeof product.category === "object" && product.category ? (product.category as { name: string }).name : "—"}
+                      </span>
                     </td>
-                    <td className="py-3 px-3 text-white font-medium">{formatPrice(product.basePrice)}</td>
-                    <td className="py-3 px-3">
-                      <Badge variant={product.totalStock === 0 ? "danger" : product.totalStock <= 5 ? "warning" : "success"}>
-                        {product.totalStock}
-                      </Badge>
+                    <td className="py-4 px-5">
+                       <span className="text-[13px] font-black text-white italic tracking-wider">{formatPrice(product.basePrice)}</span>
                     </td>
-                    <td className="py-3 px-3 text-slate-400">{product.purchaseCount || 0}</td>
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-1">
-                        <Badge variant={product.isActive ? "success" : "danger"}>
-                          {product.isActive ? "Active" : "Inactive"}
-                        </Badge>
-                        {product.isFeatured && <Badge variant="info">★</Badge>}
+                    <td className="py-4 px-5">
+                      <div className="flex flex-col gap-2 items-start">
+                         <span className={`px-2 py-1 text-[9px] font-black tracking-widest uppercase italic border ${product.totalStock === 0 ? 'text-red-500 border-red-500/30 bg-red-500/10' : product.totalStock <= 5 ? 'text-amber-500 border-amber-500/30 bg-amber-500/10' : 'text-emerald-500 border-emerald-500/30 bg-emerald-500/10'}`}>
+                           {product.totalStock} IN STOCK
+                         </span>
                       </div>
                     </td>
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-1">
+                    <td className="py-4 px-5">
+                      <div className="flex gap-2">
+                         <span className={`w-2 h-2 rounded-full ${product.isActive ? "bg-emerald-500" : "bg-red-500"}`} title={product.isActive ? "Active" : "Inactive"} />
+                         {product.isFeatured && <span className="w-2 h-2 rounded-full bg-amber-500" title="Featured" />}
+                      </div>
+                    </td>
+                    <td className="py-4 px-5 text-right">
+                      <div className="flex items-center justify-end gap-2">
                         <Link href={`/admin/products/${product._id}/edit`}
-                          className="p-2 text-slate-400 hover:text-blue-400 rounded-lg hover:bg-slate-800 transition-all">
-                          <FiEdit2 size={14} />
+                          className="w-8 h-8 flex items-center justify-center border border-white/20 text-white/40 hover:text-white hover:border-[#ef4a23] hover:bg-[#ef4a23] transition-colors">
+                          <FiEdit2 size={12} />
                         </Link>
                         <button onClick={() => handleDelete(product._id)}
-                          className="p-2 text-slate-400 hover:text-red-400 rounded-lg hover:bg-slate-800 transition-all cursor-pointer">
-                          <FiTrash2 size={14} />
+                          className="w-8 h-8 flex items-center justify-center border border-white/20 text-white/40 hover:text-white hover:border-red-500 hover:bg-red-500 transition-colors">
+                          <FiTrash2 size={12} />
                         </button>
                       </div>
                     </td>
@@ -217,8 +229,10 @@ export default function AdminProductsPage() {
                 ))}
                 {filteredProducts.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="py-10 text-center text-slate-500">
-                      {searchFilter ? "No products match your search" : "No products yet. Click \"Add Product\" to create one."}
+                    <td colSpan={7} className="py-16 text-center">
+                       <span className="text-[10px] font-black tracking-[0.4em] text-white/20 uppercase italic">
+                         {searchFilter ? "No signals detected." : "Database empty."}
+                       </span>
                     </td>
                   </tr>
                 )}

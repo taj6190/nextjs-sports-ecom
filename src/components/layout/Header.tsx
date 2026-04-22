@@ -1,13 +1,13 @@
 "use client";
 
+import { optimizeCloudinaryUrl } from "@/lib/utils";
 import { useCartStore } from "@/stores/cartStore";
 import { useWishlistStore } from "@/stores/wishlistStore";
 import type { ICategory } from "@/types";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { FiHeart, FiLogOut, FiMenu, FiSearch, FiSettings, FiShoppingCart, FiUser, FiMaximize } from "react-icons/fi";
-import { optimizeCloudinaryUrl } from "@/lib/utils";
+import { FiHeart, FiLogOut, FiMenu, FiSearch, FiSettings, FiShoppingCart, FiUser } from "react-icons/fi";
 import CartDrawer from "../cart/CartDrawer";
 import MobileNav from "./MobileNav";
 
@@ -15,7 +15,7 @@ export default function Header() {
   const { data: session } = useSession();
   const items = useCartStore((s) => s.items);
   const openCart = useCartStore((s) => s.openCart);
-  
+
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -23,10 +23,10 @@ export default function Header() {
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [categoryTree, setCategoryTree] = useState<(ICategory & { children?: ICategory[] })[]>([]);
-  
+
   const wishlistCount = useWishlistStore((s) => s.items.length);
   const syncWishlist = useWishlistStore((s) => s.syncFromServer);
-  
+
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Fix hydration mismatch
@@ -94,7 +94,7 @@ export default function Header() {
         {/* L1: The Core Bridge (Mobile Compact: 58px / Desktop: 76px) */}
         <div className="border-b border-[#eee]">
           <div className="max-w-[1400px] mx-auto px-4 md:px-8 flex items-center h-[58px] md:h-[76px] justify-between">
-            
+
             {/* Branding - Scaled for Precision */}
             <Link href="/" className="flex flex-col shrink-0 group">
               <span className="text-xl md:text-3xl font-[1000] text-[#081621] tracking-tighter italic uppercase leading-[0.8] transition-all group-hover:text-[#ef4a23]">
@@ -117,7 +117,7 @@ export default function Header() {
                  <div className="absolute right-0 top-1/2 -translate-y-1/2 p-2 group-focus-within/search:text-[#ef4a23] transition-colors">
                     <FiSearch size={16} />
                  </div>
-                 
+
                  {/* Intelligence Panel */}
                  {showResults && (searchResults.length > 0 || !isSearching) && (
                    <div className="absolute top-[calc(100%+12px)] left-0 w-full bg-white border-2 border-[#081621] shadow-[15px_15px_0px_rgba(8,22,33,0.08)] z-[100] animate-in fade-in slide-in-from-top-1 duration-200">
@@ -183,11 +183,9 @@ export default function Header() {
                          <Link href="/account" className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center text-[#081621] hover:bg-[#f8f8f8]">
                             <FiUser size={18} />
                          </Link>
-                         {isAdmin && (
-                           <Link href="/admin" className="hidden sm:flex w-11 h-11 items-center justify-center text-[#081621] hover:bg-[#f8f8f8]">
-                              <FiSettings size={18} />
-                           </Link>
-                         )}
+                          <Link href="/account/profile" className="hidden sm:flex w-11 h-11 items-center justify-center text-[#081621] hover:bg-[#f8f8f8]">
+                             <FiSettings size={18} />
+                          </Link>
                          <button onClick={() => signOut()} className="w-9 h-9 md:w-11 md:h-11 flex items-center justify-center text-[#081621] hover:text-[#ef4a23] cursor-pointer">
                             <FiLogOut size={16} />
                          </button>
@@ -240,7 +238,7 @@ export default function Header() {
                     >
                       // {cat.name}
                     </Link>
-                    
+
                     {cat.children && cat.children.length > 0 && (
                       <div className="absolute top-full left-0 bg-white border-2 border-[#081621] shadow-[15px_15px_0px_rgba(8,22,33,0.1)] min-w-[220px] opacity-0 invisible group-hover/nav:opacity-100 group-hover/nav:visible transition-all duration-300 z-50">
                          <div className="py-2.5">

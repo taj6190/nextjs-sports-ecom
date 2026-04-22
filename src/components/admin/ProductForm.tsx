@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import ImageUploader from "./ImageUploader";
@@ -34,6 +35,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<ICategory[]>([]);
+  const [brands, setBrands] = useState<{ _id: string; name: string }[]>([]);
   const [allAttributes, setAllAttributes] = useState<IAttribute[]>([]);
   const [activeTab, setActiveTab] = useState("general");
 
@@ -81,6 +83,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
 
   useEffect(() => {
     fetch("/api/categories").then((r) => r.json()).then((d) => d.success && setCategories(d.data));
+    fetch("/api/brands").then((r) => r.json()).then((d) => d.success && setBrands(d.data));
     fetch("/api/attributes").then((r) => r.json()).then((d) => d.success && setAllAttributes(d.data));
   }, []);
 
@@ -553,18 +556,29 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                   <option value="">Select category</option>
                   {categories.map((cat) => (
                     <option key={cat._id} value={cat._id}>
-                      {cat.icon} {cat.name} {cat.parent ? "(Sub)" : ""}
+                      {cat.icon} {typeof cat.parent === 'object' && cat.parent?.name ? `${cat.parent.name} > ` : ""}{cat.name}
                     </option>
                   ))}
                 </select>
               </div>
-              <Input
-                label="Brand"
-                value={form.brand}
-                onChange={(e) => setForm({ ...form, brand: e.target.value })}
-                placeholder="e.g., Samsung"
-                id="product-brand"
-              />
+              <div>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="block text-sm font-medium text-slate-300">Brand</label>
+                  <Link href="/admin/brands" className="text-[10px] uppercase font-bold text-blue-400 hover:text-blue-300">Manage Brands</Link>
+                </div>
+                <select
+                  value={form.brand}
+                  onChange={(e) => setForm({ ...form, brand: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer"
+                >
+                  <option value="">Select brand</option>
+                  {brands.map((brand) => (
+                    <option key={brand._id} value={brand.name}>
+                      {brand.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
             
             <div className="pt-4 border-t border-slate-800/50">

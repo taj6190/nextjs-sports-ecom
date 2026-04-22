@@ -1,9 +1,8 @@
 "use client";
 
-import Badge from "@/components/ui/Badge";
-import { formatPrice } from "@/lib/utils";
 import { useEffect, useState } from "react";
-import { FiAlertTriangle, FiBarChart2, FiBox, FiDollarSign, FiShoppingCart, FiTrendingUp } from "react-icons/fi";
+import { formatPrice } from "@/lib/utils";
+import { FiAlertTriangle, FiBarChart2, FiBox, FiDollarSign, FiShoppingCart, FiTrendingUp, FiUsers } from "react-icons/fi";
 
 interface AnalyticsData {
   totalRevenue: number;
@@ -32,225 +31,206 @@ export default function AdminDashboard() {
     Promise.all([
       fetch("/api/analytics").then(r => r.json()),
       fetch("/api/products?limit=100").then(r => r.json()),
-    ]).then(([analytics, products]) => {
+      fetch("/api/admin/users").then(r => r.json()), // Try fetching users if the endpoint exists and is authorized
+    ]).then(([analytics, products, users]) => {
       if (analytics.success) setData(analytics.data);
       if (products.success) {
         setTotalProducts(products.pagination?.total || 0);
         const low = (products.data || []).filter((p: { totalStock: number }) => p.totalStock <= 5);
         setLowStock(low.slice(0, 10));
       }
+      if (users && users.success) {
+         setTotalUsers(users.data?.length || 0);
+      }
       setLoading(false);
-    });
-    // Get user count separately
-    fetch("/api/orders?limit=1").then(r => r.json()).then(() => {
-      setTotalUsers(0); // We don't have a user count endpoint, use analytics data
+    }).catch(() => {
+       setLoading(false);
     });
   }, []);
 
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-48 skeleton" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1,2,3,4].map(i => <div key={i} className="h-32 skeleton rounded-2xl" />)}
+        <div className="h-8 w-48 bg-white/5 animate-pulse" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {[1,2,3,4].map(i => <div key={i} className="h-32 bg-white/5 border border-white/10 animate-pulse" />)}
         </div>
       </div>
     );
   }
 
-  if (!data) return <p className="text-slate-500">Failed to load analytics.</p>;
-
-  const revenueChange = data.lastMonthRevenue > 0
-    ? Math.round(((data.monthlyRevenue - data.lastMonthRevenue) / data.lastMonthRevenue) * 100)
-    : 100;
+  if (!data) return <p className="text-white/40 text-[11px] uppercase tracking-widest font-bold">Failed to load telemetry.</p>;
 
   const stats = [
-    { label: "Total Revenue", value: formatPrice(data.totalRevenue), sub: `${formatPrice(data.todayRevenue)} today`, icon: FiDollarSign, color: "emerald", trend: `${revenueChange >= 0 ? "+" : ""}${revenueChange}% vs last month` },
-    { label: "Total Orders", value: data.totalOrders.toString(), sub: `${data.todayOrders} today`, icon: FiShoppingCart, color: "blue", trend: `${data.monthlyOrders} this month` },
-    { label: "Active Products", value: totalProducts.toString(), sub: `${lowStock.length} low stock`, icon: FiBox, color: "purple" },
-    { label: "Monthly Revenue", value: formatPrice(data.monthlyRevenue), sub: `${data.monthlyOrders} orders`, icon: FiTrendingUp, color: "amber" },
+    { label: "Global Revenue", value: formatPrice(data.totalRevenue), sub: `${formatPrice(data.todayRevenue)} Today`, icon: FiDollarSign, color: "text-[#ef4a23]" },
+    { label: "Total Deployments", value: data.totalOrders.toString(), sub: `${data.todayOrders} Today`, icon: FiShoppingCart, color: "text-white" },
+    { label: "Active Assets", value: totalProducts.toString(), sub: `${lowStock.length} Critical Status`, icon: FiBox, color: "text-white" },
+    { label: "Personnel Units", value: totalUsers.toString(), sub: "Velocity Squad", icon: FiUsers, color: "text-[#ef4a23]" },
   ];
 
   const statusColors: Record<string, string> = {
-    pending: "text-yellow-400 bg-yellow-500/10",
-    confirmed: "text-blue-400 bg-blue-500/10",
-    processing: "text-indigo-400 bg-indigo-500/10",
-    shipped: "text-cyan-400 bg-cyan-500/10",
-    delivered: "text-emerald-400 bg-emerald-500/10",
-    cancelled: "text-red-400 bg-red-500/10",
+    pending: "text-amber-500 bg-amber-500/10 border-amber-500/20",
+    confirmed: "text-blue-500 bg-blue-500/10 border-blue-500/20",
+    processing: "text-indigo-500 bg-indigo-500/10 border-indigo-500/20",
+    shipped: "text-cyan-500 bg-cyan-500/10 border-cyan-500/20",
+    delivered: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20",
+    cancelled: "text-red-500 bg-red-500/10 border-red-500/20",
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 select-none">
+      
+      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="text-sm text-slate-500 mt-1">Advanced overview of your store performance</p>
+        <div className="flex items-center gap-2 mb-2">
+            <div className="w-1.5 h-4 bg-[#ef4a23]" />
+            <h2 className="text-[10px] font-black tracking-[0.4em] text-[#ef4a23] uppercase italic">Central Command</h2>
+        </div>
+        <h1 className="text-3xl lg:text-4xl font-[1000] text-white tracking-tighter uppercase italic">
+          Network <span className="text-white/20">Overview</span>
+        </h1>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {stats.map((stat, i) => {
           const Icon = stat.icon;
           return (
-            <div key={i} className="bg-slate-900/50 border border-slate-800/50 rounded-2xl p-5 hover:border-slate-700/50 transition-all">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm text-slate-400">{stat.label}</span>
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-${stat.color}-500/10 text-${stat.color}-400`}>
-                  <Icon size={20} />
-                </div>
+            <div key={i} className="bg-[#111119] border border-white/[0.06] p-6 relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#ef4a23]/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="flex justify-between items-start mb-4">
+                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 italic">{stat.label}</span>
+                 <Icon size={16} className={stat.color} />
               </div>
-              <p className="text-2xl font-bold text-white">{stat.value}</p>
-              <div className="flex items-center justify-between mt-1">
-                <span className="text-xs text-slate-500">{stat.sub}</span>
-                {stat.trend && <span className="text-[10px] text-emerald-400">{stat.trend}</span>}
+              <p className="text-3xl font-[1000] text-white tracking-tighter mb-2 italic">
+                 {stat.value}
+              </p>
+              <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-widest text-white/30">
+                 <span>{stat.sub}</span>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Order Status Distribution */}
-      <div className="bg-slate-900/50 border border-slate-800/50 rounded-2xl p-5">
-        <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-          <FiBarChart2 className="text-blue-400" size={18} /> Order Status Overview
-        </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"].map((status) => (
-            <div key={status} className={`p-3 rounded-xl text-center ${statusColors[status]}`}>
-              <p className="text-2xl font-bold">{data.ordersByStatus[status] || 0}</p>
-              <p className="text-xs capitalize mt-1 opacity-80">{status}</p>
-            </div>
-          ))}
-        </div>
+      {/* Deployment Status */}
+      <div className="bg-[#111119] border border-white/[0.06] p-6">
+         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/[0.06]">
+            <FiBarChart2 size={16} className="text-[#ef4a23]" />
+            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-white italic">Fulfillment Matrix</h3>
+         </div>
+         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            {["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"].map((status) => (
+              <div key={status} className={`p-4 border text-center transition-all ${statusColors[status]}`}>
+                <p className="text-2xl font-[1000] italic mb-1">{data.ordersByStatus[status] || 0}</p>
+                <p className="text-[9px] font-black uppercase tracking-widest opacity-80">{status}</p>
+              </div>
+            ))}
+         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Revenue by Product - Top 10 */}
-        <div className="bg-slate-900/50 border border-slate-800/50 rounded-2xl p-5">
-          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <FiTrendingUp className="text-emerald-400" size={18} /> Revenue by Product
-          </h2>
-          {data.revenueByProduct.length > 0 ? (
-            <div className="space-y-3">
-              {data.revenueByProduct.map((item, i) => {
-                const maxRev = data.revenueByProduct[0]?.totalRevenue || 1;
-                const pct = Math.round((item.totalRevenue / maxRev) * 100);
-                return (
-                  <div key={item._id || i} className="space-y-1">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-white font-medium line-clamp-1 flex-1">{item.productName}</span>
-                      <span className="text-slate-400 ml-2">{formatPrice(item.totalRevenue)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
-                      </div>
-                      <span className="text-[10px] text-slate-500 w-12 text-right">{item.totalQuantity} sold</span>
-                    </div>
-                  </div>
-                );
-              })}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+         
+         {/* Asset Telemetry Top 10 */}
+         <div className="bg-[#111119] border border-white/[0.06] p-6">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/[0.06]">
+               <FiTrendingUp size={16} className="text-[#ef4a23]" />
+               <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-white italic">Asset Performance</h3>
             </div>
-          ) : (
-            <p className="text-sm text-slate-500 py-4 text-center">No sales data yet</p>
-          )}
-        </div>
-
-        {/* Revenue by Category */}
-        <div className="bg-slate-900/50 border border-slate-800/50 rounded-2xl p-5">
-          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <FiBarChart2 className="text-purple-400" size={18} /> Revenue by Category
-          </h2>
-          {data.revenueByCategory.length > 0 ? (
-            <div className="space-y-3">
-              {data.revenueByCategory.map((item, i) => {
-                const maxRev = data.revenueByCategory[0]?.totalRevenue || 1;
-                const pct = Math.round((item.totalRevenue / maxRev) * 100);
-                return (
-                  <div key={item._id || i} className="space-y-1">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-white font-medium flex items-center gap-2">
-                        <span>{item.categoryIcon || "📦"}</span>
-                        {item.categoryName || "Unknown"}
-                      </span>
-                      <span className="text-slate-400">{formatPrice(item.totalRevenue)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
-                      </div>
-                      <span className="text-[10px] text-slate-500 w-12 text-right">{item.totalQuantity} sold</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="text-sm text-slate-500 py-4 text-center">No sales data yet</p>
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Daily Revenue Chart (last 30 days) */}
-        <div className="bg-slate-900/50 border border-slate-800/50 rounded-2xl p-5">
-          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <FiTrendingUp className="text-blue-400" size={18} /> Daily Revenue (30 Days)
-          </h2>
-          {data.dailyRevenue.length > 0 ? (
-            <div className="space-y-2">
-              <div className="flex items-end gap-1 h-40">
-                {data.dailyRevenue.map((day, i) => {
-                  const maxRev = Math.max(...data.dailyRevenue.map(d => d.revenue)) || 1;
-                  const height = Math.max(4, (day.revenue / maxRev) * 100);
-                  return (
-                    <div key={i} className="flex-1 flex flex-col items-center justify-end group relative">
-                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:block z-10">
-                        <div className="px-2 py-1 bg-slate-800 border border-slate-700 rounded-lg text-[10px] text-white whitespace-nowrap">
-                          {formatPrice(day.revenue)} • {day.orders} orders
-                          <br />{day._id}
+            {data.revenueByProduct.length > 0 ? (
+               <div className="space-y-5">
+                  {data.revenueByProduct.map((item, i) => {
+                     const maxRev = data.revenueByProduct[0]?.totalRevenue || 1;
+                     const pct = Math.round((item.totalRevenue / maxRev) * 100);
+                     return (
+                        <div key={item._id || i} className="group">
+                           <div className="flex justify-between items-center mb-2">
+                              <span className="text-[11px] font-bold text-white uppercase truncate pr-4">{item.productName}</span>
+                              <span className="text-[11px] font-black text-[#ef4a23] italic whitespace-nowrap">{formatPrice(item.totalRevenue)}</span>
+                           </div>
+                           <div className="flex items-center gap-3">
+                              <div className="flex-1 h-1.5 bg-white/[0.04]">
+                                 <div className="h-full bg-white/80 transition-all duration-1000" style={{ width: `${pct}%` }} />
+                              </div>
+                              <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest w-16 text-right">
+                                 {item.totalQuantity} Sold
+                              </span>
+                           </div>
                         </div>
-                      </div>
-                      <div
-                        className="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t hover:from-blue-500 hover:to-blue-300 transition-colors cursor-pointer"
-                        style={{ height: `${height}%`, minHeight: "4px" }}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="flex justify-between text-[10px] text-slate-600">
-                <span>{data.dailyRevenue[0]?._id}</span>
-                <span>{data.dailyRevenue[data.dailyRevenue.length - 1]?._id}</span>
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm text-slate-500 py-4 text-center">No data yet</p>
-          )}
-        </div>
+                     )
+                  })}
+               </div>
+            ) : (
+               <div className="py-10 text-center text-[10px] font-black uppercase tracking-[0.4em] text-white/20 italic">No telemetry data</div>
+            )}
+         </div>
 
-        {/* Low Stock Alerts */}
-        <div className="bg-slate-900/50 border border-slate-800/50 rounded-2xl p-5">
-          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <FiAlertTriangle className="text-amber-400" size={18} /> Low Stock Alerts
-          </h2>
-          {lowStock.length > 0 ? (
-            <div className="space-y-3">
-              {lowStock.map((product) => (
-                <div key={String(product._id)} className="flex items-center justify-between p-3 bg-slate-800/20 rounded-xl">
-                  <div>
-                    <p className="text-sm font-medium text-white">{product.name}</p>
+         {/* Sector Performance */}
+         <div className="space-y-6">
+            
+            <div className="bg-[#111119] border border-white/[0.06] p-6">
+               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/[0.06]">
+                  <FiBox size={16} className="text-[#ef4a23]" />
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-white italic">Sector Performance</h3>
+               </div>
+               {data.revenueByCategory.length > 0 ? (
+                  <div className="space-y-5">
+                     {data.revenueByCategory.map((item, i) => {
+                        const maxRev = data.revenueByCategory[0]?.totalRevenue || 1;
+                        const pct = Math.round((item.totalRevenue / maxRev) * 100);
+                        return (
+                           <div key={item._id || i}>
+                              <div className="flex justify-between items-center mb-2">
+                                 <span className="text-[11px] font-bold text-white flex items-center gap-2 uppercase">
+                                    <span className="text-white/40">{item.categoryIcon || "//"}</span> {item.categoryName || "Unknown"}
+                                 </span>
+                                 <span className="text-[11px] font-black text-white/60 italic">{formatPrice(item.totalRevenue)}</span>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                 <div className="flex-1 h-1.5 bg-white/[0.04]">
+                                    <div className="h-full bg-[#ef4a23] transition-all duration-1000" style={{ width: `${pct}%` }} />
+                                 </div>
+                                 <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest w-16 text-right">
+                                    {item.totalQuantity} Sold
+                                 </span>
+                              </div>
+                           </div>
+                        )
+                     })}
                   </div>
-                  <Badge variant={product.totalStock === 0 ? "danger" : "warning"}>
-                    {product.totalStock} in stock
-                  </Badge>
-                </div>
-              ))}
+               ) : (
+                  <div className="py-10 text-center text-[10px] font-black uppercase tracking-[0.4em] text-white/20 italic">No telemetry data</div>
+               )}
             </div>
-          ) : (
-            <p className="text-sm text-slate-500 py-4 text-center">All products are well stocked ✓</p>
-          )}
-        </div>
+
+            {/* Critical Asset Alerts */}
+            <div className="bg-[#111119] border border-white/[0.06] p-6">
+               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/[0.06]">
+                  <FiAlertTriangle size={16} className="text-amber-500" />
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-white italic">Critical Asset Alerts</h3>
+               </div>
+               {lowStock.length > 0 ? (
+                  <div className="space-y-3">
+                     {lowStock.map((product) => (
+                        <div key={String(product._id)} className="flex items-center justify-between p-3 border border-white/[0.04] bg-white/[0.02]">
+                           <span className="text-[11px] font-bold text-white uppercase truncate pr-4">{product.name}</span>
+                           <span className={`px-2 py-1 text-[9px] font-black uppercase tracking-widest border ${
+                              product.totalStock === 0 
+                                 ? "text-red-500 border-red-500/30 bg-red-500/10" 
+                                 : "text-amber-500 border-amber-500/30 bg-amber-500/10"
+                           }`}>
+                              {product.totalStock} IN STOCK
+                           </span>
+                        </div>
+                     ))}
+                  </div>
+               ) : (
+                  <div className="py-8 text-center text-[10px] font-black uppercase tracking-[0.4em] text-emerald-500/60 italic">Assets Nominal</div>
+               )}
+            </div>
+
+         </div>
+
       </div>
     </div>
   );

@@ -28,90 +28,95 @@ export default function CreateUserPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success("User created successfully");
+        toast.success("PERSONNEL PROTOCOL INITIALIZED");
         router.push("/admin/users");
       } else {
-        toast.error(data.message || "Failed to create user");
+        toast.error(data.message?.toUpperCase() || "INITIALIZATION FAILED");
       }
     } catch {
-      toast.error("Network error");
+      toast.error("NETWORK ERROR");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-2xl select-none">
       <div>
-        <Link href="/admin/users" className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white transition-colors mb-4">
-          <FiArrowLeft size={14} /> Back to Users
+        <Link href="/admin/users" className="inline-flex items-center gap-2 text-[10px] font-black tracking-widest uppercase italic text-white/40 hover:text-white transition-colors mb-6 border border-white/10 px-3 py-1.5 hover:bg-white/5">
+          <FiArrowLeft size={12} /> Abort Profile Creation
         </Link>
-        <h1 className="text-2xl font-bold text-white">Create User</h1>
-        <p className="text-sm text-slate-500 mt-1">Add a new user to the system</p>
+        <div className="flex items-center gap-2 mb-2">
+           <div className="w-1.5 h-4 bg-[#ef4a23]" />
+           <h2 className="text-[10px] font-black tracking-[0.4em] text-[#ef4a23] uppercase italic">Operative Entry</h2>
+        </div>
+        <h1 className="text-3xl lg:text-4xl font-[1000] text-white tracking-tighter uppercase italic">
+          Enlist <span className="text-white/20">Personnel</span>
+        </h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-slate-900/50 border border-slate-800/50 rounded-2xl p-6 space-y-5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+      <form onSubmit={handleSubmit} className="bg-[#111119] border border-white/[0.06] p-6 space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Full Name</label>
+            <label className="text-[10px] font-black tracking-[0.2em] text-white/40 uppercase italic">Ident (Name)</label>
             <input
               type="text"
               required
               value={form.name}
               onChange={e => setForm({ ...form, name: e.target.value })}
-              className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 text-white text-sm rounded-xl outline-none focus:border-blue-500 transition-all"
-              placeholder="John Doe"
+              className="w-full px-4 py-3 bg-white/[0.02] border border-white/[0.06] text-white text-[12px] font-bold tracking-widest uppercase italic outline-none focus:border-[#ef4a23] transition-colors placeholder:text-white/20"
+              placeholder="J. DOE"
             />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Email</label>
+            <label className="text-[10px] font-black tracking-[0.2em] text-white/40 uppercase italic">Comm Link (Email)</label>
             <input
               type="email"
               required
               value={form.email}
               onChange={e => setForm({ ...form, email: e.target.value })}
-              className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 text-white text-sm rounded-xl outline-none focus:border-blue-500 transition-all"
-              placeholder="user@example.com"
+              className="w-full px-4 py-3 bg-white/[0.02] border border-white/[0.06] text-white text-[12px] font-bold tracking-widest uppercase italic outline-none focus:border-[#ef4a23] transition-colors placeholder:text-white/20"
+              placeholder="OPERATIVE@NETWORK.COM"
             />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Password</label>
+            <label className="text-[10px] font-black tracking-[0.2em] text-white/40 uppercase italic">Access Codes (Password)</label>
             <input
               type="password"
               required
               value={form.password}
               onChange={e => setForm({ ...form, password: e.target.value })}
-              className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 text-white text-sm rounded-xl outline-none focus:border-blue-500 transition-all"
+              className="w-full px-4 py-3 bg-white/[0.02] border border-white/[0.06] text-white text-[12px] font-bold tracking-widest uppercase italic outline-none focus:border-[#ef4a23] transition-colors placeholder:text-white/20"
               placeholder="••••••••"
             />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Phone</label>
+            <label className="text-[10px] font-black tracking-[0.2em] text-white/40 uppercase italic">Freq. Channel (Phone)</label>
             <input
               type="tel"
               value={form.phone}
               onChange={e => setForm({ ...form, phone: e.target.value })}
-              className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 text-white text-sm rounded-xl outline-none focus:border-blue-500 transition-all"
+              className="w-full px-4 py-3 bg-white/[0.02] border border-white/[0.06] text-white text-[12px] font-bold tracking-widest uppercase italic outline-none focus:border-[#ef4a23] transition-colors placeholder:text-white/20"
               placeholder="+8801XXXXXXXXX"
             />
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Role</label>
-          <div className="flex gap-3">
+        <div className="space-y-2 pt-4 border-t border-white/[0.06]">
+          <label className="text-[10px] font-black tracking-[0.2em] text-white/40 uppercase italic">Clearance Level</label>
+          <div className="flex gap-4">
             {["user", "admin"].map(role => (
               <button
                 key={role}
                 type="button"
                 onClick={() => setForm({ ...form, role })}
-                className={`flex-1 py-3 text-sm font-semibold rounded-xl border transition-all capitalize ${
+                className={`flex-1 py-3 text-[11px] font-black tracking-widest uppercase italic border transition-all ${
                   form.role === role
-                    ? "bg-blue-600 border-blue-500 text-white"
-                    : "bg-slate-800/50 border-slate-700 text-slate-400 hover:border-slate-500"
+                    ? "bg-[#ef4a23] border-[#ef4a23] text-white"
+                    : "bg-white/[0.02] border-white/20 text-white/40 hover:border-white/50 hover:text-white"
                 }`}
               >
-                {role}
+                {role === "admin" ? "Level 5 (Admin)" : "Level 1 (User)"}
               </button>
             ))}
           </div>
@@ -120,10 +125,10 @@ export default function CreateUserPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+          className="w-full py-4 mt-6 bg-white hover:bg-white/90 text-black text-[12px] font-black tracking-[0.2em] uppercase italic transition-all disabled:opacity-50 flex items-center justify-center gap-3 border border-transparent"
         >
           <FiUserPlus size={16} />
-          {loading ? "Creating..." : "Create User"}
+          {loading ? "INITIALIZING SECURE PROFILE..." : "INITIALIZE PROFILE"}
         </button>
       </form>
     </div>

@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
       }
 
       const categories = await Category.find(filter)
+        .populate("parent", "name")
         .sort({ name: 1 })
         .lean();
 
@@ -75,14 +76,30 @@ export async function POST(req: NextRequest) {
 
     await dbConnect();
     const body = await req.json();
-    const slug = body.slug ? slugify(body.slug) : slugify(body.name);
+    let slug = body.slug ? slugify(body.slug) : slugify(body.name);
 
-    const existing = await Category.findOne({ slug });
+    // Context-aware slug generation
+    let existing = await Category.findOne({ slug });
     if (existing) {
-      return NextResponse.json(
-        { success: false, error: "Category already exists" },
-        { status: 400 }
-      );
+      if (body.parent) {
+        const parent = await Category.findById(body.parent);
+        if (parent) {
+          slug = `${parent.slug}-${slug}`;
+          // Check again with parent prefix
+          existing = await Category.findOne({ slug });
+        }
+      }
+      
+      // If still exists or no parent, add numeric suffix
+      if (existing) {
+        let count = 1;
+        let newSlug = `${slug}-${count}`;
+        while (await Category.findOne({ slug: newSlug })) {
+          count++;
+          newSlug = `${slug}-${count}`;
+        }
+        slug = newSlug;
+      }
     }
 
     const category = await Category.create({
@@ -114,12 +131,32 @@ export async function PUT(req: NextRequest) {
     const body = await req.json();
     const { _id, ...updateData } = body;
 
-    if (updateData.slug) {
-      updateData.slug = slugify(updateData.slug);
-    } else if (updateData.name || updateData.slug === "") {
-      // If slug is explicitly empty or name was updated, generate slug
-      const cat = await Category.findById(_id);
-      updateData.slug = slugify(updateData.name || cat?.name || "");
+    if (updateData.name || updateData.slug !== undefined) {
+      let slug = updateData.slug ? slugify(updateData.slug) : slugify(updateData.name);
+      
+      // Check for collision excluding current self
+      let existing = await Category.findOne({ slug, _id: { $ne: _id } });
+      if (existing) {
+        const parentId = updateData.parent || (await Category.findById(_id))?.parent;
+        if (parentId) {
+          const parent = await Category.findById(parentId);
+          if (parent) {
+            slug = `${parent.slug}-${slug}`;
+            existing = await Category.findOne({ slug, _id: { $ne: _id } });
+          }
+        }
+
+        if (existing) {
+          let count = 1;
+          let newSlug = `${slug}-${count}`;
+          while (await Category.findOne({ slug: newSlug, _id: { $ne: _id } })) {
+            count++;
+            newSlug = `${slug}-${count}`;
+          }
+          slug = newSlug;
+        }
+      }
+      updateData.slug = slug;
     }
 
     const category = await Category.findByIdAndUpdate(_id, updateData, { new: true });

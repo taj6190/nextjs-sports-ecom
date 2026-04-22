@@ -1,3 +1,4 @@
+import OfficialMerch from "@/components/home/OfficialMerch";
 import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
 import ProductCard from "@/components/product/ProductCard";
@@ -78,7 +79,7 @@ export default async function HomePage() {
                     <img
                       src="https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=800&auto=format&fit=crop"
                       alt="Velocity Gear"
-                      className="w-full aspect-[4/5] object-cover grayscale"
+                      className="w-full aspect-[4/5] object-cover"
                     />
                     <div className="absolute -top-4 -right-4 bg-[#ef4a23] text-white p-4 font-black italic text-[10px] uppercase tracking-[0.3em]">
                        Node.2024
@@ -115,7 +116,7 @@ export default async function HomePage() {
                 { name: "Badminton // Tech", img: "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?q=80", tag: "03" }
               ].map((cat) => (
                 <Link key={cat.tag} href={`/shop?search=${cat.name.split(' ')[0]}`} className="relative group shrink-0 w-[280px] md:w-full aspect-[4/5] overflow-hidden border border-[#eee] hover:border-[#081621] transition-all">
-                  <img src={cat.img} alt={cat.name} className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" />
+                  <img src={cat.img} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#081621] to-transparent opacity-60" />
                   <div className="absolute bottom-8 left-8 text-white">
                     <p className="text-[9px] font-black uppercase tracking-[0.4em] mb-2 text-[#ef4a23]">Segment {cat.tag}</p>
@@ -153,6 +154,8 @@ export default async function HomePage() {
             </Link>
           </div>
         </section>
+
+        <OfficialMerch />
 
         {/* ── SECTION 04: TECHNICAL DEPLOYMENT ── */}
         <section className="bg-white py-20 border-t border-[#eee]">
