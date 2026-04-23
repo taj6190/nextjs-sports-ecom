@@ -127,3 +127,48 @@ export async function sendOrderConfirmationEmail(order: any) {
     return { success: false, error: err };
   }
 }
+
+export async function sendContactEmail(contactData: { name: string; email: string; subject: string; message: string }) {
+  const { name, email, subject, message } = contactData;
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: "Velocity Contact <onboarding@resend.dev>",
+      to: "syedtaj1234@gmail.com",
+      subject: `New Contact Form Submission: ${subject}`,
+      html: `
+        <div style="background-color: #0f172a; color: #e2e8f0; font-family: sans-serif; padding: 40px 20px;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #1e293b; border-radius: 16px; border: 1px solid #334155; overflow: hidden;">
+            <div style="padding: 30px; background-color: #000000; text-align: center;">
+              <h1 style="color: #ffffff; margin: 0; font-size: 20px; letter-spacing: 2px;">CONTACT TRANSMISSION</h1>
+            </div>
+            <div style="padding: 40px 30px;">
+              <div style="margin-bottom: 24px;">
+                <p style="color: #64748b; font-size: 12px; text-transform: uppercase; margin-bottom: 4px;">From</p>
+                <p style="color: #ffffff; font-size: 16px; font-weight: bold; margin: 0;">${name} (${email})</p>
+              </div>
+              <div style="margin-bottom: 24px;">
+                <p style="color: #64748b; font-size: 12px; text-transform: uppercase; margin-bottom: 4px;">Subject</p>
+                <p style="color: #ffffff; font-size: 16px; font-weight: bold; margin: 0;">${subject}</p>
+              </div>
+              <div style="padding: 20px; background-color: #0f172a; border-radius: 12px; border: 1px solid #334155;">
+                <p style="color: #64748b; font-size: 12px; text-transform: uppercase; margin-bottom: 12px;">Message Intelligence</p>
+                <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6; margin: 0; white-space: pre-wrap;">${message}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      `,
+    });
+
+    if (error) {
+      console.error("Resend contact email error:", error);
+      return { success: false, error };
+    }
+
+    return { success: true, data };
+  } catch (err) {
+    console.error("Contact email catch error:", err);
+    return { success: false, error: err };
+  }
+}

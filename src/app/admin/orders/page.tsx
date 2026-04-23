@@ -88,6 +88,11 @@ export default function AdminOrdersPage() {
     ((o.user as { name: string })?.name || "").toLowerCase().includes(searchFilter.toLowerCase())
   );
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`COPIED: ${text}`);
+  };
+
   return (
     <div className="space-y-8 select-none">
       
@@ -144,7 +149,12 @@ export default function AdminOrdersPage() {
                 {filteredOrders.map((order) => (
                   <tr key={order._id} className="border-b border-white/[0.06] hover:bg-white/[0.02] transition-colors">
                     <td className="py-4 px-5">
-                      <p className="font-black text-white text-[12px] uppercase italic tracking-wider leading-tight">{order.orderNumber}</p>
+                      <button 
+                        onClick={() => copyToClipboard(order.orderNumber)}
+                        className="font-black text-white text-[12px] uppercase italic tracking-wider leading-tight hover:text-[#ef4a23] transition-colors text-left"
+                      >
+                        {order.orderNumber}
+                      </button>
                       <p className="text-[9px] font-bold tracking-widest text-[#ef4a23] uppercase italic mt-1">{new Date(order.createdAt).toLocaleDateString()}</p>
                     </td>
                     <td className="py-4 px-5">
@@ -168,10 +178,13 @@ export default function AdminOrdersPage() {
                       </span>
                     </td>
                     <td className="py-4 px-5">
-                      <select value={order.orderStatus} onChange={(e) => updateStatus(order._id, e.target.value)}
-                        className="px-3 py-2 bg-[#111119] border border-white/20 text-[10px] font-bold tracking-widest text-white uppercase italic outline-none focus:border-[#ef4a23] transition-colors cursor-pointer appearance-none">
-                        {statuses.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
+                      <div className="relative inline-block">
+                        <select value={order.orderStatus} onChange={(e) => updateStatus(order._id, e.target.value)}
+                          className="px-3 py-2 bg-[#111119] border border-white/20 text-[10px] font-bold tracking-widest text-white uppercase italic outline-none focus:border-[#ef4a23] transition-colors cursor-pointer appearance-none min-w-[120px]">
+                          {statuses.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-white/20 text-[8px]">▼</div>
+                      </div>
                     </td>
                     <td className="py-4 px-5 text-right">
                       <button onClick={() => setDetailOrder(order)}
@@ -187,6 +200,7 @@ export default function AdminOrdersPage() {
           </div>
         )}
       </div>
+
 
       {/* Order Detail Modal */}
       <Modal isOpen={!!detailOrder} onClose={() => setDetailOrder(null)} title={`Deployment ${detailOrder?.orderNumber || ""}`}>

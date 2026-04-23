@@ -5,34 +5,40 @@ import Order from "@/models/Order";
 export async function POST(req: NextRequest) {
   try {
     await dbConnect();
-    const { orderNumber, phoneOrEmail } = await req.json();
+    const { query } = await req.json();
 
-    if (!orderNumber || !phoneOrEmail) {
+    if (!query) {
       return NextResponse.json(
-        { success: false, error: "Order number and phone/email are required" },
+        { success: false, error: "Search query is required" },
         { status: 400 }
       );
     }
 
-    // Try to find the order by orderNumber
-    // Then verify if either shippingAddress.phone or shippingAddress.email matches
+    const cleanQuery = query.trim();
+    const noHashQuery = cleanQuery.replace("#", "");
+
+    // Find the latest order matching orderNumber (flexible) OR phone OR email
     const order = await Order.findOne({ 
-      orderNumber: orderNumber.replace("#", "").trim(),
       $or: [
-        { "shippingAddress.phone": phoneOrEmail.trim() },
-        { "shippingAddress.email": phoneOrEmail.trim().toLowerCase() }
+        { orderNumber: cleanQuery },
+        { orderNumber: noHashQuery },
+        { orderNumber: `#${noHashQuery}` },
+        { orderNumber: `ELM-${noHashQuery}` },
+        { "shippingAddress.phone": cleanQuery },
+        { "shippingAddress.email": cleanQuery.toLowerCase() }
       ]
-    }).populate("user", "name").lean();
+    })
+    .sort({ createdAt: -1 })
+    .populate("user", "name")
+    .lean();
 
     if (!order) {
       return NextResponse.json(
-        { success: false, error: "Order not found or details mismatch" },
+        { success: false, error: "No matching order found" },
         { status: 404 }
       );
     }
 
-    // Return the order but maybe strip some ultra-sensitive details if necessary
-    // For now, returning the status and history is the goal
     return NextResponse.json({ success: true, data: order });
   } catch (error) {
     console.error("Order tracking error:", error);
