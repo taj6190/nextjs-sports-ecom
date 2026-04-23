@@ -1,7 +1,16 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { FiFacebook, FiInstagram, FiTwitter, FiMapPin, FiPhone, FiMail } from "react-icons/fi";
 
 export default function Footer() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <footer className="bg-[#081621] border-t-4 border-[#ef4a23]">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-16">
@@ -61,12 +70,20 @@ export default function Footer() {
             <p className="text-[13px] text-slate-400 mb-4">
               Subscribe to get notified about new deals and updates.
             </p>
-            <div className="flex mb-6">
-              <input type="email" placeholder="Email Address" className="w-full px-4 py-2 bg-[#0c1e2b] border border-[#1b3446] text-white text-[13px] focus:outline-none focus:border-[#ef4a23]" />
-              <button className="px-4 py-2 bg-[#ef4a23] hover:bg-[#d03d1c] text-white text-[13px] font-bold uppercase tracking-wider transition-colors">
-                Subscribe
-              </button>
-            </div>
+            {mounted ? (
+              <div className="flex mb-6">
+                <input 
+                  type="email" 
+                  placeholder="Email Address" 
+                  className="w-full px-4 py-2 bg-[#0c1e2b] border border-[#1b3446] text-white text-[13px] focus:outline-none focus:border-[#ef4a23]" 
+                />
+                <button className="px-4 py-2 bg-[#ef4a23] hover:bg-[#d03d1c] text-white text-[13px] font-bold uppercase tracking-wider transition-colors">
+                  Subscribe
+                </button>
+              </div>
+            ) : (
+              <div className="flex mb-6 h-[42px] bg-[#0c1e2b] border border-[#1b3446] animate-pulse" />
+            )}
             
             <div className="flex gap-2">
               <a href="#" className="w-10 h-10 border border-[#1b3446] flex items-center justify-center text-slate-400 hover:text-white hover:bg-[#3b5998] hover:border-[#3b5998] transition-colors">

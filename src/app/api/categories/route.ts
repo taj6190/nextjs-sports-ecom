@@ -36,7 +36,12 @@ export async function GET(req: NextRequest) {
         const categoryTree = parentCategories.map((parent) => ({
           ...parent,
           children: categories.filter(
-            (c) => c.parent && c.parent.toString() === parent._id.toString()
+            (c) => {
+              const pId = c.parent && typeof c.parent === 'object' && '_id' in c.parent
+                ? (c.parent as any)._id.toString()
+                : c.parent?.toString();
+              return pId === parent._id.toString();
+            }
           ),
         }));
         return categoryTree;
@@ -89,7 +94,7 @@ export async function POST(req: NextRequest) {
           existing = await Category.findOne({ slug });
         }
       }
-      
+
       // If still exists or no parent, add numeric suffix
       if (existing) {
         let count = 1;
@@ -107,7 +112,7 @@ export async function POST(req: NextRequest) {
       slug,
       parent: body.parent || null,
     });
-    
+
     await clearCategoryCache();
     return NextResponse.json({ success: true, data: category }, { status: 201 });
   } catch (error) {
@@ -133,7 +138,7 @@ export async function PUT(req: NextRequest) {
 
     if (updateData.name || updateData.slug !== undefined) {
       let slug = updateData.slug ? slugify(updateData.slug) : slugify(updateData.name);
-      
+
       // Check for collision excluding current self
       let existing = await Category.findOne({ slug, _id: { $ne: _id } });
       if (existing) {
@@ -195,7 +200,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     await Category.findByIdAndUpdate(id, { isActive: false, deletedAt: new Date() });
-    
+
     await clearCategoryCache();
     return NextResponse.json({ success: true, message: "Category deleted" });
   } catch (error) {

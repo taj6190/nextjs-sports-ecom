@@ -7,6 +7,7 @@ import type { NextAuthConfig } from "next-auth";
  *  - auth.ts (Node runtime) — spread in as base config
  */
 export const authConfig: NextAuthConfig = {
+  trustHost: true,
   providers: [], // Providers with DB/bcrypt are added in auth.ts (Node only)
   pages: {
     signIn: "/login",
