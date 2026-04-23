@@ -28,26 +28,37 @@ export const authConfig: NextAuthConfig = {
       }
       return session;
     },
-    authorized({ auth, request: { nextUrl } }) {
+    authorized({ auth, request }) {
+      const { nextUrl, headers } = request;
       const isLoggedIn = !!auth?.user;
       const role = (auth?.user as { role?: string } | undefined)?.role;
       const { pathname } = nextUrl;
 
+      // Robustly determine the base URL from headers to avoid localhost redirects on production
+      const host = headers.get("host");
+      const protocol = headers.get("x-forwarded-proto") || "http";
+      const baseUrl = `${protocol}://${host}`;
+
       // Admin routes — must be logged in and have admin role
       if (pathname.startsWith("/admin")) {
-        if (!isLoggedIn)
-          return Response.redirect(new URL("/login?callbackUrl=/admin", nextUrl));
-        if (role !== "admin")
-          return Response.redirect(new URL("/", nextUrl));
+        if (!isLoggedIn) {
+          const url = new URL("/login", baseUrl);
+          url.searchParams.set("callbackUrl", "/admin");
+          return Response.redirect(url);
+        }
+        if (role !== "admin") {
+          return Response.redirect(new URL("/", baseUrl));
+        }
         return true;
       }
 
       // Account routes — must be logged in
       if (pathname.startsWith("/account")) {
-        if (!isLoggedIn)
-          return Response.redirect(
-            new URL(`/login?callbackUrl=${pathname}`, nextUrl)
-          );
+        if (!isLoggedIn) {
+          const url = new URL("/login", baseUrl);
+          url.searchParams.set("callbackUrl", pathname);
+          return Response.redirect(url);
+        }
         return true;
       }
 
@@ -58,7 +69,7 @@ export const authConfig: NextAuthConfig = {
 
       // Auth pages — redirect logged-in users away
       if ((pathname === "/login" || pathname === "/register") && isLoggedIn) {
-        return Response.redirect(new URL("/", nextUrl));
+        return Response.redirect(new URL("/", baseUrl));
       }
 
       return true;

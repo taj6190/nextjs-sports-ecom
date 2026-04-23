@@ -45,10 +45,10 @@ export default function Footer() {
           <div>
             <h4 className="text-[15px] font-bold text-white uppercase tracking-widest mb-6">About Us</h4>
             <ul className="space-y-3">
-              <li><Link href="/" className="text-[13px] text-slate-400 hover:text-[#ef4a23] transition-colors">Our Company</Link></li>
-              <li><Link href="/" className="text-[13px] text-slate-400 hover:text-[#ef4a23] transition-colors">Contact Us</Link></li>
-              <li><Link href="/" className="text-[13px] text-slate-400 hover:text-[#ef4a23] transition-colors">Terms and Conditions</Link></li>
-              <li><Link href="/" className="text-[13px] text-slate-400 hover:text-[#ef4a23] transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/about" className="text-[13px] text-slate-400 hover:text-[#ef4a23] transition-colors">Our Company</Link></li>
+              <li><Link href="/contact" className="text-[13px] text-slate-400 hover:text-[#ef4a23] transition-colors">Contact Us</Link></li>
+              <li><Link href="/terms" className="text-[13px] text-slate-400 hover:text-[#ef4a23] transition-colors">Terms and Conditions</Link></li>
+              <li><Link href="/privacy-policy" className="text-[13px] text-slate-400 hover:text-[#ef4a23] transition-colors">Privacy Policy</Link></li>
             </ul>
           </div>
 
@@ -56,8 +56,8 @@ export default function Footer() {
           <div>
             <h4 className="text-[15px] font-bold text-white uppercase tracking-widest mb-6">Customer Service</h4>
             <ul className="space-y-3">
-              <li><Link href="/" className="text-[13px] text-slate-400 hover:text-[#ef4a23] transition-colors">Refund and Return Policy</Link></li>
-              <li><Link href="/" className="text-[13px] text-slate-400 hover:text-[#ef4a23] transition-colors">EMI Policy</Link></li>
+              <li><Link href="/refund-policy" className="text-[13px] text-slate-400 hover:text-[#ef4a23] transition-colors">Refund and Return Policy</Link></li>
+              <li><Link href="/emi-policy" className="text-[13px] text-slate-400 hover:text-[#ef4a23] transition-colors">EMI Policy</Link></li>
               <li><Link href="/" className="text-[13px] text-slate-400 hover:text-[#ef4a23] transition-colors">Delivery Options</Link></li>
               <li><Link href="/track-order" className="text-[13px] text-slate-400 hover:text-[#ef4a23] transition-colors">Track Order</Link></li>
               <li><Link href="/account" className="text-[13px] text-slate-400 hover:text-[#ef4a23] transition-colors">My Account</Link></li>
